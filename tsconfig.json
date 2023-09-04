@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "baseUrl": ".",
     "inlineSourceMap": true,
     "inlineSources": true,
