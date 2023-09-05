@@ -8,8 +8,14 @@ import { createContext, StrictMode, useContext } from "react";
 import { createRoot, Root } from 'react-dom/client'
 import { AppContext } from 'components/context/context';
 const VIEW_TYPE_EXAMPLE = "example-view";
+
 import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
 import ExampleClient from './artifacts/ExampleClient.json'
+
+import { Helia, createHelia } from 'helia'
+import { unixfs, UnixFS } from '@helia/unixfs'
+import { CID } from 'multiformats'
+
 interface ChainConfig {
 	name: string;
 	rpcUrl: string;
@@ -40,7 +46,9 @@ export default class ObsidianLilypad extends Plugin {
 	signer: Signer
 	exampleClient: ethers.Contract
 	logDebug: (...args: unknown[]) => void = () => { }
-
+	helia: Helia
+	fs: UnixFS
+	decoder: TextDecoder
 	async onload() {
 		await this.loadSettings();
 		this.provider = new JsonRpcProvider(this.settings.chain.rpcUrl)
@@ -51,6 +59,21 @@ export default class ObsidianLilypad extends Plugin {
 		} else {
 			console.log('no private key detected, web3 not enabled')
 		}
+		this.addCommand({
+			id: 'runCowsay',
+			name: 'execute the cowsay program through a smart contract',
+			callback: () => {
+				this.runCowsay()
+			}
+		});
+		try {
+			this.helia = await createHelia()
+			this.fs = unixfs(this.helia)
+			this.decoder = new TextDecoder()
+		} catch (e) {
+			this.logDebug(`helia init error: ${e}`)
+		}
+		console.log('passed helia')
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Obsidian Lilypad', (evt: MouseEvent) => {
@@ -65,31 +88,13 @@ export default class ObsidianLilypad extends Plugin {
 		statusBarItemEl.setText('Status Bar Text');
 
 		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'runCowsay',
-			name: 'execute the cowsay program through a smart contract',
-			callback: () => {
-				this.runCowsay()
-			}
-		});
 
 		// This adds a complex command that can check whether the current state of the app allows execution of the command
 		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
+			id: 'ipfsCat',
+			name: 'attempt to fetch a cid from ipfs',
+			callback: (checking: boolean) => {
+				this.cat()
 			}
 		});
 
@@ -104,12 +109,14 @@ export default class ObsidianLilypad extends Plugin {
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		console.log('end of onload')
 	}
 
 	onunload() {
-
 	}
-	async runCowsay() {
+
+	async cat() {
+		
 		if (this.unloaded) return
 
 		this.logDebug("Running Cowsay")
@@ -138,6 +145,69 @@ export default class ObsidianLilypad extends Plugin {
 
 			const created = createNode(canvas, node,
 				{
+					text: `attempting to fetch ${nodeText} from ipfs`,
+					size: { height: placeholderNoteHeight }
+				},
+				{
+					color: assistantColor,
+					chat_role: 'assistant'
+				}
+			)
+			let content:string = ''
+			try {
+				console.log('waiting for ipfs. . .')
+				let Cid = CID.parse(String(nodeText))
+				console.log('Cid', Cid)
+				console.log('Cid', Cid.toString())
+				for await (const buf of this.fs.cat(CID.parse(String(nodeText)))) {
+					console.info(buf)
+					content += this.decoder.decode(buf, {
+						stream: true
+					})
+				  }
+				created.setText(content)
+			} catch (e) {
+				this.logDebug(e)
+				console.log('ipfs fetch error: ', e)
+				created.setText(`error :( : ${e}`)
+				return
+			}
+			created.setText(content)
+
+		}
+	}
+
+	async runCowsay() {
+		console.log('unloaded status: ', this.unloaded)
+		if (this.unloaded) return
+
+		this.logDebug("Running Cowsay")
+
+		const canvas = this.getActiveCanvas()
+		if (!canvas) {
+			this.logDebug('No active canvas')
+			return
+		}
+		const selection = canvas.selection
+		if (selection?.size !== 1) return
+		const values = Array.from(selection.values())
+		const node = values[0]
+		if (node) {
+			await canvas.requestSave()
+			await sleep(200)
+
+			const settings = this.settings
+
+			const nodeData = node.getData()
+			let nodeText = await getNodeText(node) || ''
+			if (nodeText.length == 0) {
+				console.log('no node text')
+				this.logDebug('no node Text found')
+				return
+			}
+
+			const created = createNode(canvas, node,
+				{
 					text: `Calling Lilpad Cowsay with ${nodeText}`,
 					size: { height: placeholderNoteHeight }
 				},
@@ -146,9 +216,8 @@ export default class ObsidianLilypad extends Plugin {
 					chat_role: 'assistant'
 				}
 			)
-
 			try {
-
+				console.log('waiting for cowsay run')
 				const tx = await this.exampleClient.runCowsay(
 					nodeText, {
 						value: ethers.parseUnits('2', 'ether')
@@ -159,19 +228,29 @@ export default class ObsidianLilypad extends Plugin {
 				created.setText(`success! tx hash: ${tx.hash}, fetching ipfs.io cid`)
 
 				const res = await this.exampleClient.fetchAllResults()
-				console.log(res)
-				created.setText(`${res}`)
-				
+				const ipfsio = res[res.length -1][2]
+				const cid = res[res.length - 1][1]
+				created.setText(`job complete see on ${ipfsio}`)
+				console.log('hmmmmmm')
+				const ipfsFetchNode = createNode(canvas, created,
+					{
+						text: `${cid}`,
+						size: {height: placeholderNoteHeight}
+					}, 
+					{
+						color: assistantColor,
+						chat_role: 'assistant'
+					}
+				)
 
-			} catch (e) {
-				created.setText(`error :( ${e}`)
-				this.logDebug(`e: ${e}`)
-			}
-
-
-
+				} catch (e) {
+					created.setText(`error :( ${e}`)
+					this.logDebug(`error :( : ${e}`)
+					return 
+				}
 		}
 	}
+	
 	getActiveCanvas() {
 		const maybeCanvasView = this.app.workspace.getActiveViewOfType(ItemView) as CanvasView | null
 		return maybeCanvasView ? maybeCanvasView['canvas'] : null
