@@ -1,4 +1,4 @@
-import { App, TFile, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf } from 'obsidian';
+import { requestUrl, App, TFile, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf } from 'obsidian';
 import { AllCanvasNodeData } from 'obsidian/canvas'
 import { CanvasView, addEdge } from './utils/canvas-util'
 
@@ -73,6 +73,20 @@ export default class ObsidianLilypad extends Plugin {
 				this.runSDXL()
 			}
 		});
+		this.addCommand({
+			id: 'getDpid',
+			name: 'retreive the json of a desci nodes research object',
+			callback: () => {
+				this.getDpid()
+			}
+		});
+		this.addCommand({
+			id: 'ipfsCat',
+			name: 'attempt to fetch a cid from ipfs',
+			callback: () => {
+				this.cat()
+			}
+		});
 		try {
 			this.helia = await createHelia()
 			this.fs = unixfs(this.helia)
@@ -97,13 +111,6 @@ export default class ObsidianLilypad extends Plugin {
 		// This adds a simple command that can be triggered anywhere
 
 		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'ipfsCat',
-			name: 'attempt to fetch a cid from ipfs',
-			callback: () => {
-				this.cat()
-			}
-		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new ObsidianLilypadSettingTab(this.app, this));
@@ -122,6 +129,65 @@ export default class ObsidianLilypad extends Plugin {
 	onunload() {
 	}
 
+	async getDpid() {
+		if (this.unloaded) return
+
+		this.logDebug("fetching dpid json from desci nodes")
+
+		const canvas = this.getActiveCanvas()
+		if (!canvas) {
+			this.logDebug('No active canvas')
+			return
+		}
+		const selection = canvas.selection
+		if (selection?.size !== 1) return
+		const values = Array.from(selection.values())
+		const node = values[0]
+		if (node) {
+			await canvas.requestSave()
+			await sleep(200)
+
+			const settings = this.settings
+
+			//const nodeData = node.getData()
+			let nodeText = await getNodeText(node) || ''
+			if (nodeText.length == 0) {
+				console.log('no node text')
+				this.logDebug('no node Text found')
+				return
+			}
+
+			const created = createNode(canvas, node,
+				{
+					text: `fetching dpid:  ${nodeText}`,
+					size: { height: placeholderNoteHeight }
+				},
+				{
+					color: assistantColor,
+					chat_role: 'assistant'
+				}
+			)
+			try {
+				const json = await requestUrl(`http://beta.dpid.org/${nodeText}?jsonld`)
+				console.log('json: ', json)
+				const ipfsFetchNode = createNode(canvas, created,
+					{
+						text: `${JSON.stringify(json)}`,
+						size: {height: placeholderNoteHeight}
+					}, 
+					{
+						color: assistantColor,
+						chat_role: 'assistant'
+					}
+				)
+
+				} catch (e) {
+					created.setText(`error :( ${e}`)
+					this.logDebug(`error :( : ${e}`)
+					return 
+				}
+		}
+	}
 	async runSDXL() {
 		if (this.unloaded) return
 
