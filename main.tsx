@@ -66,6 +66,13 @@ export default class ObsidianLilypad extends Plugin {
 				this.runCowsay()
 			}
 		});
+		this.addCommand({
+			id: 'runSDXL',
+			name: 'execute stable diffusion on a text node',
+			callback: () => {
+				this.runSDXL()
+			}
+		});
 		try {
 			this.helia = await createHelia()
 			this.fs = unixfs(this.helia)
@@ -93,7 +100,7 @@ export default class ObsidianLilypad extends Plugin {
 		this.addCommand({
 			id: 'ipfsCat',
 			name: 'attempt to fetch a cid from ipfs',
-			callback: (checking: boolean) => {
+			callback: () => {
 				this.cat()
 			}
 		});
@@ -113,6 +120,82 @@ export default class ObsidianLilypad extends Plugin {
 	}
 
 	onunload() {
+	}
+
+	async runSDXL() {
+		if (this.unloaded) return
+
+		this.logDebug("Running sdxl")
+
+		const canvas = this.getActiveCanvas()
+		if (!canvas) {
+			this.logDebug('No active canvas')
+			return
+		}
+		const selection = canvas.selection
+		if (selection?.size !== 1) return
+		const values = Array.from(selection.values())
+		const node = values[0]
+		if (node) {
+			await canvas.requestSave()
+			await sleep(200)
+
+			const settings = this.settings
+
+			//const nodeData = node.getData()
+			let nodeText = await getNodeText(node) || ''
+			if (nodeText.length == 0) {
+				console.log('no node text')
+				this.logDebug('no node Text found')
+				return
+			}
+
+			const created = createNode(canvas, node,
+				{
+					text: `Calling Lilpad sdxl with ${nodeText}`,
+					size: { height: placeholderNoteHeight }
+				},
+				{
+					color: assistantColor,
+					chat_role: 'assistant'
+				}
+			)
+			try {
+				console.log('waiting for sdxl run')
+				const tx = await this.exampleClient.runSDXL(
+					nodeText, {
+						value: ethers.parseUnits('2', 'ether')
+					}
+				)
+				const receipt = await tx.wait()
+				console.log('receipt', receipt)
+
+				console.log('tx', tx)
+				created.setText(`success! tx hash: ${tx.hash}, fetching ipfs.io cid`)
+
+				const res = await this.exampleClient.fetchAllResults()
+				console.log('res', res)
+				const ipfsio = res[res.length -1][2]
+				const cid = res[res.length - 1][1]
+				created.setText(`job complete see on ${ipfsio}`)
+				console.log('hmmmmmm')
+				const ipfsFetchNode = createNode(canvas, created,
+					{
+						text: `${cid}`,
+						size: {height: placeholderNoteHeight}
+					}, 
+					{
+						color: assistantColor,
+						chat_role: 'assistant'
+					}
+				)
+
+				} catch (e) {
+					created.setText(`error :( ${e}`)
+					this.logDebug(`error :( : ${e}`)
+					return 
+				}
+		}
 	}
 
 	async cat() {
