@@ -12,9 +12,14 @@ const VIEW_TYPE_EXAMPLE = "example-view";
 import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
 import ExampleClient from './artifacts/ExampleClient.json'
 
+import { initHelia } from 'initHelia'
+import { node, client } from './kubo'
+
 import { Helia, createHelia } from 'helia'
 import { unixfs, UnixFS } from '@helia/unixfs'
 import { CID } from 'multiformats'
+import { delegatedContentRouting } from '@libp2p/delegated-content-routing'
+import { type create as createKuboClient } from 'kubo-rpc-client'
 
 interface ChainConfig {
 	name: string;
@@ -26,7 +31,8 @@ interface ChainConfig {
 
 interface ObsidianLilypadSettings {
 	privateKey: string;
-	chain: ChainConfig
+	chain: ChainConfig;
+	delegateKubo: boolean;
 }
 
 const DEFAULT_SETTINGS: ObsidianLilypadSettings = {
@@ -35,7 +41,8 @@ const DEFAULT_SETTINGS: ObsidianLilypadSettings = {
 		name: 'lilypad',
 		rpcUrl: 'http://testnet.lilypadnetwork.org:8545',
 		chainId: 1337
-	}
+	},
+	delegateKubo: false
 }
 
 export default class ObsidianLilypad extends Plugin {
@@ -88,9 +95,15 @@ export default class ObsidianLilypad extends Plugin {
 			}
 		});
 		try {
-			this.helia = await createHelia()
-			this.fs = unixfs(this.helia)
+			if(this.settings.delegateKubo) {
+				this.helia = await initHelia(client)
+				this.fs = unixfs(this.helia)
+			} else {
+				this.helia = await createHelia()
+				this.fs = unixfs(this.helia)
+			}
 			this.decoder = new TextDecoder()
+			
 		} catch (e) {
 			this.logDebug(`helia init error: ${e}`)
 		}
@@ -476,6 +489,16 @@ class ObsidianLilypadSettingTab extends PluginSettingTab {
 					this.plugin.settings.privateKey = value;
 					await this.plugin.saveSettings();
 				}));
+		new Setting(containerEl)
+			.setName('delegate with kubo')
+			.setDesc('if you have a ipfs daemon running in another cli, you can speed up ipfs fetch with this')
+			.addToggle((toggle) => {
+				toggle.setValue(this.plugin.settings.delegateKubo).onChange(async (value) => {
+					this.plugin.settings.delegateKubo = value
+					await this.plugin.saveSettings();
+					console.log('kubo is: ', this.plugin.settings.delegateKubo)
+				})
+			});
 	}
 }
 
