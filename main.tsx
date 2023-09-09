@@ -62,6 +62,7 @@ export default class ObsidianLilypad extends Plugin {
 		if (this.settings.privateKey) {
 			this.wallet = new Wallet(this.settings.privateKey, this.provider)
 			this.signer = this.wallet.connect(this.provider)
+			console.log('clientadd', ExampleClient.address)
 			this.exampleClient = new ethers.Contract(ExampleClient.address, ExampleClient.abi, this.signer)
 		} else {
 			console.log('no private key detected, web3 not enabled')
@@ -97,6 +98,7 @@ export default class ObsidianLilypad extends Plugin {
 		try {
 			if(this.settings.delegateKubo) {
 				this.helia = await initHelia(client)
+				console.log('helia delegate kubo')
 				this.fs = unixfs(this.helia)
 			} else {
 				this.helia = await createHelia()
@@ -141,7 +143,9 @@ export default class ObsidianLilypad extends Plugin {
 
 	onunload() {
 	}
+	async fetchResult() {
 
+	}
 	async getDpid() {
 		if (this.unloaded) return
 
@@ -241,34 +245,35 @@ export default class ObsidianLilypad extends Plugin {
 			)
 			try {
 				console.log('waiting for sdxl run')
+				console.log('signer', this.signer)
 				const tx = await this.exampleClient.runSDXL(
 					nodeText, {
-						value: ethers.parseUnits('2', 'ether')
+						value: ethers.parseUnits('4', 'ether')
 					}
 				)
 				const receipt = await tx.wait()
 				console.log('receipt', receipt)
 
 				console.log('tx', tx)
-				created.setText(`success! tx hash: ${tx.hash}, fetching ipfs.io cid`)
+				created.setText(`success! tx hash: ${tx.hash}, listening for job completion`)
+				this.exampleClient.on("ReceivedJobResults", (jobId, cid) => {	
+					//const res = await this.exampleClient.fetchAllResults()
+					//console.log('res', res)
+					//const ipfsio = res[res.length -1][2]
+					const ipfsFetchNode = createNode(canvas, created,
+						{
+							text: `${cid}`,
+							size: {height: placeholderNoteHeight}
+						}, 
+						{
+							color: assistantColor,
+							chat_role: 'assistant'
+						}
+					)
 
-				const res = await this.exampleClient.fetchAllResults()
-				console.log('res', res)
-				const ipfsio = res[res.length -1][2]
-				const cid = res[res.length - 1][1]
-				created.setText(`job complete see on ${ipfsio}`)
-				console.log('hmmmmmm')
-				const ipfsFetchNode = createNode(canvas, created,
-					{
-						text: `${cid}`,
-						size: {height: placeholderNoteHeight}
-					}, 
-					{
-						color: assistantColor,
-						chat_role: 'assistant'
-					}
-				)
-
+				})
+				/*
+				*/
 				} catch (e) {
 					created.setText(`error :( ${e}`)
 					this.logDebug(`error :( : ${e}`)
@@ -276,7 +281,6 @@ export default class ObsidianLilypad extends Plugin {
 				}
 		}
 	}
-
 	async cat() {
 		
 		if (this.unloaded) return
@@ -321,12 +325,14 @@ export default class ObsidianLilypad extends Plugin {
 				let Cid = CID.parse(String(nodeText))
 				console.log('Cid', Cid)
 				console.log('Cid', Cid.toString())
+				console.log(this.fs.cat(CID.parse(String(nodeText))))
 				for await (const buf of this.fs.cat(CID.parse(String(nodeText)))) {
-					console.info(buf)
+					console.log(buf)
 					content += this.decoder.decode(buf, {
 						stream: true
 					})
 				  }
+				console.log('for await complete')
 				created.setText(content)
 			} catch (e) {
 				this.logDebug(e)
@@ -338,7 +344,6 @@ export default class ObsidianLilypad extends Plugin {
 
 		}
 	}
-
 	async runCowsay() {
 		console.log('unloaded status: ', this.unloaded)
 		if (this.unloaded) return

@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 interface ModicumContract {
   function runModuleWithDefaultMediators(string calldata name, string calldata params) external payable returns (uint256);
+  function getModuleCost(string calldata name) external view returns (uint256);
 }
 
 // Payment is 2 lilETH for all jobs currently
@@ -46,12 +47,12 @@ contract ExampleClient {
   }
 
   function runSDXL(string memory prompt) public payable returns (uint256) {
-    require(msg.value == lilypadFee * 1 ether, string(abi.encodePacked("Payment of 2 Ether is required")));
+    require(msg.value == 4 ether, string(abi.encodePacked("Payment of 4 Ether is required")));
     return runModule("sdxl:v0.9-lilypad1", prompt);
   }
 
  function runModule(string memory name, string memory params) public payable returns (uint256) {
-    require(msg.value == lilypadFee * 1 ether, string(abi.encodePacked("Payment of 2 Ether is required")));
+    //require(msg.value == lilypadFee * 1 ether, string(abi.encodePacked("Payment of 2 Ether is required")));
     return remoteContractInstance.runModuleWithDefaultMediators{value: msg.value}(name, params);
   }
 
@@ -65,6 +66,10 @@ contract ExampleClient {
     results.push(jobResult);
 
     emit ReceivedJobResults(_jobID, _cid);
+  }
+
+  function getModuleCost(string calldata name) public view returns (uint256) {
+    return remoteContractInstance.getModuleCost(name);
   }
 
   function fetchAllResults() public view returns (Result[] memory) {

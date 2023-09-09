@@ -17,7 +17,6 @@ import { circuitRelayTransport } from 'libp2p/circuit-relay'
 import { identifyService } from 'libp2p/identify'
 
 //import { addDagNodeToHelia } from '../lib/helpers'
-import { node, client } from 'kubo'
 export async function initHelia(
     kuboClient: ReturnType<typeof createKuboClient>
 ): Promise<Helia> {
@@ -30,13 +29,12 @@ export async function initHelia(
     const libp2p = await createLibp2p({
         start: true, // TODO: libp2p bug with stop/start - https://github.com/libp2p/js-libp2p/issues/1787
         peerRouters: [
-            delegatedPeerRouting(client)
+            delegatedPeerRouting(kuboClient)
         ],
         contentRouters: [
-            delegatedContentRouting(client)
+            delegatedContentRouting(kuboClient)
         ],
         datastore,
-        /*
         transports: [
           webRTC(),
           webRTCDirect(),
@@ -57,7 +55,6 @@ export async function initHelia(
           identify: identifyService(),
           autoNAT: autoNATService()
         }
-        */
     })
 
     const helia = await createHelia({
