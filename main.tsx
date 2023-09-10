@@ -21,6 +21,24 @@ import { CID } from 'multiformats'
 import { delegatedContentRouting } from '@libp2p/delegated-content-routing'
 import { type create as createKuboClient } from 'kubo-rpc-client'
 
+
+(async function heliaAuto() {
+	const instance = await createHelia()
+	const testfs = await unixfs(instance)
+	const testDecoder = new TextDecoder()
+	let content = ''
+
+	let Cid = CID.parse(String('QmQb8JqfusoZ9opKJSrToabwCq2Vjv1JJyUPRYG6FJVg1P'))
+	for await (const buf of testfs.cat(Cid)) {
+		console.log('buffer', buf)
+		content += testDecoder.decode(buf, {
+			stream: true
+		})
+	}
+	console.log('content', content)
+})();
+
+
 interface ChainConfig {
 	name: string;
 	rpcUrl: string;
@@ -67,6 +85,23 @@ export default class ObsidianLilypad extends Plugin {
 		} else {
 			console.log('no private key detected, web3 not enabled')
 		}
+		try {
+			if(this.settings.delegateKubo) {
+				const instance = await initHelia(client)
+				console.log('helia delegate kubo')
+				this.fs = unixfs(instance)
+				this.helia = instance
+			} else {
+				console.log('starting helia without kubo')
+				this.helia = await createHelia({})
+				this.fs = unixfs(this.helia)
+			}
+			this.decoder = new TextDecoder()
+			
+		} catch (e) {
+			this.logDebug(`helia init error: ${e}`)
+		}
+		console.log('passed helia')
 		this.addCommand({
 			id: 'runCowsay',
 			name: 'execute the cowsay program through a smart contract',
@@ -95,21 +130,6 @@ export default class ObsidianLilypad extends Plugin {
 				this.cat()
 			}
 		});
-		try {
-			if(this.settings.delegateKubo) {
-				this.helia = await initHelia(client)
-				console.log('helia delegate kubo')
-				this.fs = unixfs(this.helia)
-			} else {
-				this.helia = await createHelia()
-				this.fs = unixfs(this.helia)
-			}
-			this.decoder = new TextDecoder()
-			
-		} catch (e) {
-			this.logDebug(`helia init error: ${e}`)
-		}
-		console.log('passed helia')
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Obsidian Lilypad', (evt: MouseEvent) => {
@@ -325,9 +345,9 @@ export default class ObsidianLilypad extends Plugin {
 				let Cid = CID.parse(String(nodeText))
 				console.log('Cid', Cid)
 				console.log('Cid', Cid.toString())
-				console.log(this.fs.cat(CID.parse(String(nodeText))))
-				for await (const buf of this.fs.cat(CID.parse(String(nodeText)))) {
-					console.log(buf)
+				console.log(this.fs.cat(Cid))
+				for await (const buf of this.fs.cat(Cid)) {
+					console.log('buffer', buf)
 					content += this.decoder.decode(buf, {
 						stream: true
 					})
