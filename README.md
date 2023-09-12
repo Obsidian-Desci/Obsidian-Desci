@@ -24,6 +24,9 @@ In a canvas, select a node and run hit Ctrl-P to search for
 - `npm i` or `yarn` to install dependencies.
 - `npm run dev` to start compilation in watch mode.
 
+### add to community plugins
+![output](https://github.com/polus-arcticus/obsidian-lilypad/assets/122753557/76b74cfb-1e0b-4c72-9b2a-5b2a163b5399)
+
 ```json
 {
     "fundingUrl": "joe-mcgee.radicle.eth"
