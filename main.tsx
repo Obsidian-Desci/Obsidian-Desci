@@ -17,11 +17,12 @@ import { node, client } from './kubo'
 
 import { Helia, createHelia } from 'helia'
 import { unixfs, UnixFS } from '@helia/unixfs'
+import { dagJson, DAGJSON } from '@helia/dag-json';
 import { CID } from 'multiformats'
 import { delegatedContentRouting } from '@libp2p/delegated-content-routing'
 import { type create as createKuboClient } from 'kubo-rpc-client'
 
-
+/*
 (async function heliaAuto() {
 	const instance = await createHelia()
 	const testfs = await unixfs(instance)
@@ -37,7 +38,7 @@ import { type create as createKuboClient } from 'kubo-rpc-client'
 	}
 	console.log('content', content)
 })();
-
+*/
 
 interface ChainConfig {
 	name: string;
@@ -73,6 +74,7 @@ export default class ObsidianLilypad extends Plugin {
 	logDebug: (...args: unknown[]) => void = () => { }
 	helia: Helia
 	fs: UnixFS
+	dagJsonInstance: DAGJSON
 	decoder: TextDecoder
 	async onload() {
 		await this.loadSettings();
@@ -87,14 +89,15 @@ export default class ObsidianLilypad extends Plugin {
 		}
 		try {
 			if(this.settings.delegateKubo) {
-				const instance = await initHelia(client)
+				this.helia = await initHelia(client)
 				console.log('helia delegate kubo')
-				this.fs = unixfs(instance)
-				this.helia = instance
+				this.fs = unixfs(this.helia)
+				this.dagJsonInstance = dagJson(this.helia)
 			} else {
 				console.log('starting helia without kubo')
 				this.helia = await createHelia({})
 				this.fs = unixfs(this.helia)
+				this.dagJsonInstance = dagJson(this.helia)
 			}
 			this.decoder = new TextDecoder()
 			
@@ -104,30 +107,44 @@ export default class ObsidianLilypad extends Plugin {
 		console.log('passed helia')
 		this.addCommand({
 			id: 'runCowsay',
-			name: 'execute the cowsay program through a smart contract',
+			name: 'runCowsay - execute the cowsay program through a smart contract',
 			callback: () => {
 				this.runCowsay()
 			}
 		});
 		this.addCommand({
 			id: 'runSDXL',
-			name: 'execute stable diffusion on a text node',
+			name: 'runSDXL - execute stable diffusion on a text node',
 			callback: () => {
 				this.runSDXL()
 			}
 		});
 		this.addCommand({
 			id: 'getDpid',
-			name: 'retreive the json of a desci nodes research object',
+			name: 'getDpid - retreive the json of a desci nodes research object',
 			callback: () => {
 				this.getDpid()
 			}
 		});
 		this.addCommand({
 			id: 'ipfsCat',
-			name: 'attempt to fetch a cid from ipfs',
+			name: 'ipfsCat - attempt to fetch a cid from ipfs',
 			callback: () => {
 				this.cat()
+			}
+		});
+		this.addCommand({
+			id: 'ipfsDagGet',
+			name: 'ipfsDagGet - fetch json behind a persistent identifer',
+			callback: () => {
+				this.ipfsDagGet()
+			}
+		});
+		this.addCommand({
+			id: 'ipfsAdd',
+			name: 'ipfsAdd - Add Json objects referenced by CID',
+			callback: () => {
+				this.ipfsAdd()
 			}
 		});
 
@@ -163,9 +180,8 @@ export default class ObsidianLilypad extends Plugin {
 
 	onunload() {
 	}
-	async fetchResult() {
 
-	}
+
 	async getDpid() {
 		if (this.unloaded) return
 
@@ -301,11 +317,149 @@ export default class ObsidianLilypad extends Plugin {
 				}
 		}
 	}
+	async ipfsDagGet() {
+		const res = await requestUrl('http://localhost:3000/')
+		console.log('res', res)
+		if (this.unloaded) return
+
+		this.logDebug("attempting to fetch from ipfs")
+
+		const canvas = this.getActiveCanvas()
+		if (!canvas) {
+			this.logDebug('No active canvas')
+			return
+		}
+		const selection = canvas.selection
+		if (selection?.size !== 1) return
+		const values = Array.from(selection.values())
+		const node = values[0]
+		if (node) {
+			await canvas.requestSave()
+			await sleep(200)
+
+			const settings = this.settings
+
+			const nodeData = node.getData()
+			let nodeText = await getNodeText(node) || ''
+			if (nodeText.length == 0) {
+				this.logDebug('no node Text found')
+				return
+			}
+
+			const created = createNode(canvas, node,
+				{
+					text: `attempting to fetch ${nodeText} from ipfs`,
+					size: { height: placeholderNoteHeight }
+				},
+				{
+					color: assistantColor,
+					chat_role: 'assistant'
+				}
+			)
+
+			try {
+				let Cid = CID.parse(String(nodeText))
+				const content = await this.dagJsonInstance.get(Cid)
+			const cidNode = createNode(canvas, created,
+				{
+					text: `${JSON.stringify(content)}`,
+					size: { height: placeholderNoteHeight }
+				},
+				{
+					color: assistantColor,
+					chat_role: 'assistant'
+				}
+			)
+
+			} catch (e) {
+			const cideNodeError = createNode(canvas, created,
+				{
+					text: `error at ${e}`,
+					size: { height: placeholderNoteHeight }
+				},
+				{
+					color: assistantColor,
+					chat_role: 'assistant'
+				}
+			)
+
+			}
+		}
+	}
+
+	async ipfsAdd() {
+		if (this.unloaded) return
+
+		this.logDebug("attempting to fetch from ipfs")
+
+		const canvas = this.getActiveCanvas()
+		if (!canvas) {
+			this.logDebug('No active canvas')
+			return
+		}
+		const selection = canvas.selection
+		if (selection?.size !== 1) return
+		const values = Array.from(selection.values())
+		const node = values[0]
+		if (node) {
+			await canvas.requestSave()
+			await sleep(200)
+
+			const settings = this.settings
+
+			const nodeData = node.getData()
+			let nodeText = await getNodeText(node) || ''
+			if (nodeText.length == 0) {
+				this.logDebug('no node Text found')
+				return
+			}
+
+			const created = createNode(canvas, node,
+				{
+					text: `adding ${nodeText} to ipfs`,
+					size: { height: placeholderNoteHeight }
+				},
+				{
+					color: assistantColor,
+					chat_role: 'assistant'
+				}
+			)
+
+			try {
+				const cid = await this.dagJsonInstance.add({
+					text: nodeText
+				})
+			const cidNode = createNode(canvas, created,
+				{
+					text: `added at ${cid.toString()}`,
+					size: { height: placeholderNoteHeight }
+				},
+				{
+					color: assistantColor,
+					chat_role: 'assistant'
+				}
+			)
+
+			} catch (e) {
+			const cideNodeError = createNode(canvas, created,
+				{
+					text: `error at ${e}`,
+					size: { height: placeholderNoteHeight }
+				},
+				{
+					color: assistantColor,
+					chat_role: 'assistant'
+				}
+			)
+
+			}
+		}
+	}
 	async cat() {
 		
 		if (this.unloaded) return
 
-		this.logDebug("Running Cowsay")
+		this.logDebug("attempting to fetch from ipfs")
 
 		const canvas = this.getActiveCanvas()
 		if (!canvas) {

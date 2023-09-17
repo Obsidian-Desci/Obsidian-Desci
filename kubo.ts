@@ -21,8 +21,8 @@ export const client = kuboClient({
   host: '127.0.0.1',
   headers: {
     'Access-Control-Allow-Origin': "*",
-    'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-    "Authorization": 'Bearer whatever'
+    'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST, PUT',
+    //"Authorization": 'Bearer whatever'
   }
 })
 
