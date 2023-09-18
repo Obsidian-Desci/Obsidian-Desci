@@ -29,7 +29,7 @@ export const initLibp2p = async () => {
     const libp2p = await createLibp2p({
         addresses: {
             listen: [
-                '/ip4/127.0.0.1/tcp/0'
+                '/ip4/127.0.0.1/tcp/5001'
             ]
           },
         start: true, // TODO: libp2p bug with stop/start - https://github.com/libp2p/js-libp2p/issues/1787

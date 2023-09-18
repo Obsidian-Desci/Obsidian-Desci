@@ -16,8 +16,8 @@ const fastify = Fastify({
 })
 
 fastify.get('/', async (request, reply) => {
-    let Cid = CID.parse(String('QmY43r3bw9pJc28iFet42kAzVmtFuoa39kuxd4q4SG2gpz'))
-    //let Cid = CID.parse(String('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'))
+    //let Cid = CID.parse(String('QmY43r3bw9pJc28iFet42kAzVmtFuoa39kuxd4q4SG2gpz'))
+    let Cid = CID.parse(String('QmS6mcrMTFsZnT3wAptqEb8NpBPnv1H6WwZBMzEjT8SSDv'))
     console.log('home route ping')
     console.log(d.get(Cid))
     const res = await d.get(Cid)
@@ -49,7 +49,7 @@ fastify.addHook('onReady', async () => {
     
 })
 
-fastify.listen({ port: 3000 }, async (err, address) => {
+fastify.listen({ host:'0.0.0.0', port: 3000 }, async (err, address) => {
     if (err) throw err
     // Server is now listening on ${address}
 })
