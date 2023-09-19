@@ -1,7 +1,10 @@
 FROM node:20.5.0
 
+
 WORKDIR /app
 
+RUN curl -s "https://get.kamu.dev" | sh
+RUN ln -s /root/.local/bin/kamu /usr/local/bin/kamu
 COPY package.json .
 
 RUN npm install

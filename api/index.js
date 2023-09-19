@@ -1,4 +1,7 @@
 // ESM
+import util from 'util';
+import { exec as Exec } from 'child_process'
+const exec = util.promisify(Exec);
 import { CID } from 'multiformats/cid'
 import { createHelia } from 'helia'
 import { dagJson } from '@helia/dag-json'
@@ -32,6 +35,20 @@ fastify.get('/hi', async (request, reply) => {
     console.log('res', res)
     reply.type('application/json').code(200)
     return { hello: 'world' }
+})
+
+fastify.get('/kamu', async (request, reply) => {
+    // https://docs.kamu.dev/cli/collab/ipfs/
+    let Cid = CID.parse(String('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'))
+    try {
+        const { stdout, stderr } = await exec(`kamu pull ${Cid.toString()}`);
+        console.log('stdout', stdout)
+        console.log('stderr', stderr)
+
+    } catch (e) {
+        console.log('error', e)
+    }
+    
 })
 
 fastify.addHook('onReady', async () => {
