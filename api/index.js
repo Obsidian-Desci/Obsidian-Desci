@@ -16,8 +16,10 @@ const fastify = Fastify({
 })
 
 fastify.get('/', async (request, reply) => {
-    //let Cid = CID.parse(String('QmY43r3bw9pJc28iFet42kAzVmtFuoa39kuxd4q4SG2gpz'))
-    let Cid = CID.parse(String('QmS6mcrMTFsZnT3wAptqEb8NpBPnv1H6WwZBMzEjT8SSDv'))
+    // the hanging cid drawn from lilypad (for some reason works when using the chrome ipfs gateway extension and a running kubo node)
+    let Cid = CID.parse(String('QmY43r3bw9pJc28iFet42kAzVmtFuoa39kuxd4q4SG2gpz'))
+    // "project apollo archives" a cid i grabbed from the explore in the gateway (doesn't hang though i should probably us dag-cbor as the error is Error: CBOR decode error "but it doesn't hang")
+    //let Cid = CID.parse(String('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'))
     console.log('home route ping')
     console.log(d.get(Cid))
     const res = await d.get(Cid)
