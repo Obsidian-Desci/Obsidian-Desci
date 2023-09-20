@@ -18,6 +18,7 @@
     "@typescript-eslint/eslint-plugin": "5.29.0",
     "@typescript-eslint/parser": "5.29.0",
     "builtin-modules": "3.3.0",
+    "debug": "^4.3.4",
     "esbuild": "0.17.3",
     "hardhat": "^2.17.2",
     "obsidian": "latest",
@@ -27,8 +28,10 @@
   "dependencies": {
     "@chainsafe/libp2p-noise": "^13.0.1",
     "@chainsafe/libp2p-yamux": "^5.0.0",
+    "@helia/dag-cbor": "^1.0.2",
     "@helia/dag-json": "^1.0.2",
     "@helia/unixfs": "^1.4.1",
+    "@ipld/dag-json": "^10.1.4",
     "@libp2p/delegated-content-routing": "^4.0.9",
     "@libp2p/delegated-peer-routing": "^4.0.12",
     "blockstore-core": "^4.3.4",
@@ -40,6 +43,7 @@
     "kubo-rpc-client": "^3.0.1",
     "libp2p": "^0.46.9",
     "multiformats": "^12.1.1",
+    "node-fetch": "^3.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }

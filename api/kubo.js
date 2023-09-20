@@ -15,21 +15,29 @@ import { yamux } from '@chainsafe/libp2p-yamux'
 import { autoNATService } from 'libp2p/autonat'
 import { identifyService } from 'libp2p/identify'
 import { bootstrap } from '@libp2p/bootstrap'
+import {kadDHT} from '@libp2p/kad-dht'
+import { ipniContentRouting } from '@libp2p/ipni-content-routing'
 
 export const client = kuboClient({
     // use default api settings
     host: '127.0.0.1',
     port: 5001,
     protocol: 'http',
+    // ipld: {
+    //   // codecs: [dagPB]
+    // }
 })
 
+
+
 export const initLibp2p = async () => {
+  // client.start()
     const blockstore = new MemoryBlockstore()
     const datastore = new MemoryDatastore()
     const libp2p = await createLibp2p({
         addresses: {
             listen: [
-                '/ip4/127.0.0.1/tcp/5001'
+                '/ip4/127.0.0.1/tcp/5002'
             ]
           },
         start: true, // TODO: libp2p bug with stop/start - https://github.com/libp2p/js-libp2p/issues/1787
@@ -37,19 +45,24 @@ export const initLibp2p = async () => {
             delegatedPeerRouting(client)
         ],
         contentRouters: [
+            // ipniContentRouting('https://cid.contact'),
             delegatedContentRouting(client)
         ],
         datastore,
         transports: [
+            circuitRelayTransport({
+                discoverRelays: 1
+            }),
             tcp(),
             webRTC(),
             webRTCDirect(),
-            webTransport(),
+            // webTransport(),
             webSockets(),
-            circuitRelayTransport({
-                discoverRelays: 1
-            })
         ],
+        connectionManager: {
+          maxConnections: Infinity,
+          minConnections: 1
+        },
         connectionEncryption: [
             noise()
         ],
@@ -59,7 +72,8 @@ export const initLibp2p = async () => {
         ],
         services: {
             identify: identifyService(),
-            autoNAT: autoNATService()
+            autoNAT: autoNATService(),
+            // dht: kadDHT(),
         },
         peerDiscovery: [
             bootstrap({
@@ -70,8 +84,9 @@ export const initLibp2p = async () => {
                 '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
                 '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ'
               ]
-            })]
+            })
+        ]
         //.. other config
     })
-    return { libp2p, blockstore, datastore }
+    return { libp2p, blockstore, datastore, client }
 }
