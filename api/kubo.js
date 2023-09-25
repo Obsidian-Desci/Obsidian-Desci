@@ -17,15 +17,14 @@ import { identifyService } from 'libp2p/identify'
 import { bootstrap } from '@libp2p/bootstrap'
 import {kadDHT} from '@libp2p/kad-dht'
 import { ipniContentRouting } from '@libp2p/ipni-content-routing'
-
 export const client = kuboClient({
     // use default api settings
-    host: '127.0.0.1',
+    host: '0.0.0.0',
     port: 5001,
     protocol: 'http',
-    // ipld: {
-    //   // codecs: [dagPB]
-    // }
+    //ipld: {
+     //   codecs: [dagPB]
+    //}
 })
 
 
@@ -37,7 +36,6 @@ export const initLibp2p = async () => {
     const libp2p = await createLibp2p({
         addresses: {
             listen: [
-                '/ip4/127.0.0.1/tcp/5002'
             ]
           },
         start: true, // TODO: libp2p bug with stop/start - https://github.com/libp2p/js-libp2p/issues/1787
@@ -50,14 +48,14 @@ export const initLibp2p = async () => {
         ],
         datastore,
         transports: [
+            tcp(),
+            webSockets(),
             circuitRelayTransport({
                 discoverRelays: 1
             }),
-            tcp(),
             webRTC(),
             webRTCDirect(),
             // webTransport(),
-            webSockets(),
         ],
         connectionManager: {
           maxConnections: Infinity,

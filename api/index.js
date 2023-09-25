@@ -15,11 +15,17 @@ import debug from 'debug'
 import * as IpldDagJson from '@ipld/dag-json'
 import * as IpldDagPB from '@ipld/dag-pb'
 import * as IpldDagCbor from '@ipld/dag-cbor'
-
 import {dagPb} from './helia-dag-pb.js'
+import { unixfs } from '@helia/unixfs'
+import { sha256 } from 'multiformats/hashes/sha2'
+
 
 let heliaNode;
-let d;
+let dJson;
+let dCbor;
+let dPb;
+let fs;
+const decoder = new TextDecoder()
 let blockstore;
 let datastore;
 let libp2p;
@@ -50,8 +56,10 @@ fastify.get('/', getOptions, async (request, reply) => {
   }
     // the hanging cid drawn from lilypad (for some reason works when using the chrome ipfs gateway extension and a running kubo node)
     // let Cid = CID.parse(String('QmY43r3bw9pJc28iFet42kAzVmtFuoa39kuxd4q4SG2gpz'))
-    let Cid = CID.parse(request.query.cid)
-
+    console.log(request.query.cid)
+    let Cid = CID.parse(request.query.cid, sha256.decoder)
+    console.log('code', Cid.code)
+    console.log(mapFromCidCodeToHeliaWrapper)
     // need to find out what encoding is required for this CID
     if (!mapFromCidCodeToHeliaWrapper.has(Cid.code)) {
       reply.type('application/json').code(500)
@@ -69,10 +77,80 @@ fastify.get('/', getOptions, async (request, reply) => {
     // "project apollo archives" a cid i grabbed from the explore in the gateway (doesn't hang though i should probably us dag-cbor as the error is Error: CBOR decode error "but it doesn't hang")
     //let Cid = CID.parse(String('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'))
     console.log('home route ping')
-    console.log(d.get(Cid))
+    let res;
+    for await (const buf of fs.cat(Cid)) {
+      res += decoder.decode(buf, {
+        stream: true
+      })
+    } 
+    /*
+    */
+    //console.log(d.get(Cid))
+    /*
     const res = await d.get(Cid, {
-      // onProgress: (e) => console.log('progress', e)
+      onProgress: (e) => console.log('progress', e)
     })
+    const res = await dCbor.get(Cid, {
+      onProgress: (e) => console.log('cbor',e )
+    }) 
+   const res = await dPb.get(Cid, {
+    onProgress: (e) => console.log('protobuffers', e)
+   })
+    */
+    console.log('res', res)
+    reply.type('application/json').code(200)
+    return res
+})
+fastify.get('/dag', getOptions, async (request, reply) => {
+  // console.log(request.query)
+  console.log(`request.query: `, request.query);
+  if (request.query.cid === undefined) {
+    reply.type('application/json').code(500)
+    return { error: 'no cid provided' }
+  }
+    // the hanging cid drawn from lilypad (for some reason works when using the chrome ipfs gateway extension and a running kubo node)
+    // let Cid = CID.parse(String('QmY43r3bw9pJc28iFet42kAzVmtFuoa39kuxd4q4SG2gpz'))
+    console.log(request.query.cid)
+    let Cid = CID.parse(request.query.cid, sha256.decoder)
+    console.log('code', Cid.code)
+    console.log(mapFromCidCodeToHeliaWrapper)
+    // need to find out what encoding is required for this CID
+    if (!mapFromCidCodeToHeliaWrapper.has(Cid.code)) {
+      reply.type('application/json').code(500)
+      return {
+        error: 'no codec found for cid',
+        needsCodecCode: {
+          decimal: Cid.code,
+          hex: `0x${Cid.code.toString(16)}`,
+        },
+        tableOfCodes: 'https://github.com/multiformats/multicodec/blob/master/table.csv'
+      }
+    }
+
+
+    // "project apollo archives" a cid i grabbed from the explore in the gateway (doesn't hang though i should probably us dag-cbor as the error is Error: CBOR decode error "but it doesn't hang")
+    //let Cid = CID.parse(String('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'))
+    /*
+    console.log('home route ping')
+    let res;
+    for await (const buf of fs.cat(Cid)) {
+      res += decoder.decode(buf, {
+        stream: true
+      })
+    } 
+    */
+    //console.log(d.get(Cid))
+    /*
+    const res = await d.get(Cid, {
+      onProgress: (e) => console.log('progress', e)
+    })
+    const res = await dCbor.get(Cid, {
+      onProgress: (e) => console.log('cbor',e )
+    }) 
+    */
+   const res = await dPb.get(Cid, {
+    onProgress: (e) => console.log('protobuffers', e)
+   })
     console.log('res', res)
     reply.type('application/json').code(200)
     return res
@@ -107,16 +185,20 @@ fastify.addHook('onReady', async () => {
         datastore
     })
     console.log('helia created')
-    d = dagJson(heliaNode)
+    dJson = dagJson(heliaNode)
+    dCbor= dagCbor(heliaNode)
+    dPb = dagPb(heliaNode)
+    fs = unixfs(heliaNode)
 
-    mapFromCidCodeToHeliaWrapper.set(IpldDagJson.code, d)
+
+    mapFromCidCodeToHeliaWrapper.set(IpldDagJson.code, dJson)
     console.log(`IpldDagJson.code: `, IpldDagJson.code);
-    mapFromCidCodeToHeliaWrapper.set(IpldDagCbor.code, dagCbor(heliaNode))
+    mapFromCidCodeToHeliaWrapper.set(IpldDagCbor.code, dCbor)
     console.log(`IpldDagCbor.code: `, IpldDagCbor.code);
-    // mapFromCidCodeToHeliaWrapper.set(IpldDagPB.code, dagPb(heliaNode))
-    // console.log(`IpldDagPB.code: `, IpldDagPB.code);
+    mapFromCidCodeToHeliaWrapper.set(IpldDagPB.code, dPb)
+    console.log(`IpldDagPB.code: `, IpldDagPB.code);
 
-    hiCid = await d.add({"hello": "world"})
+    hiCid = await dJson.add({"hello": "world"})
     console.log(hiCid)
 
     // const result = await client.dag.get(CID.parse('QmY43r3bw9pJc28iFet42kAzVmtFuoa39kuxd4q4SG2gpz'))

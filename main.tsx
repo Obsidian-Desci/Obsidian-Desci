@@ -21,6 +21,7 @@ import { dagJson, DAGJSON } from '@helia/dag-json';
 import { CID } from 'multiformats'
 import { delegatedContentRouting } from '@libp2p/delegated-content-routing'
 import { type create as createKuboClient } from 'kubo-rpc-client'
+import { request } from 'http';
 
 /*
 (async function heliaAuto() {
@@ -87,6 +88,7 @@ export default class ObsidianLilypad extends Plugin {
 		} else {
 			console.log('no private key detected, web3 not enabled')
 		}
+		/*
 		try {
 			if(this.settings.delegateKubo) {
 				this.helia = await initHelia(client)
@@ -104,6 +106,7 @@ export default class ObsidianLilypad extends Plugin {
 		} catch (e) {
 			this.logDebug(`helia init error: ${e}`)
 		}
+		*/
 		console.log('passed helia')
 		this.addCommand({
 			id: 'runCowsay',
@@ -226,19 +229,19 @@ export default class ObsidianLilypad extends Plugin {
 				const ipfsFetchNode = createNode(canvas, created,
 					{
 						text: `${JSON.stringify(json)}`,
-						size: {height: placeholderNoteHeight}
-					}, 
+						size: { height: placeholderNoteHeight }
+					},
 					{
 						color: assistantColor,
 						chat_role: 'assistant'
 					}
 				)
 
-				} catch (e) {
-					created.setText(`error :( ${e}`)
-					this.logDebug(`error :( : ${e}`)
-					return 
-				}
+			} catch (e) {
+				created.setText(`error :( ${e}`)
+				this.logDebug(`error :( : ${e}`)
+				return
+			}
 		}
 	}
 	async runSDXL() {
@@ -284,23 +287,23 @@ export default class ObsidianLilypad extends Plugin {
 				console.log('signer', this.signer)
 				const tx = await this.exampleClient.runSDXL(
 					nodeText, {
-						value: ethers.parseUnits('4', 'ether')
-					}
+					value: ethers.parseUnits('4', 'ether')
+				}
 				)
 				const receipt = await tx.wait()
 				console.log('receipt', receipt)
 
 				console.log('tx', tx)
 				created.setText(`success! tx hash: ${tx.hash}, listening for job completion`)
-				this.exampleClient.on("ReceivedJobResults", (jobId, cid) => {	
+				this.exampleClient.on("ReceivedJobResults", (jobId, cid) => {
 					//const res = await this.exampleClient.fetchAllResults()
 					//console.log('res', res)
 					//const ipfsio = res[res.length -1][2]
 					const ipfsFetchNode = createNode(canvas, created,
 						{
 							text: `${cid}`,
-							size: {height: placeholderNoteHeight}
-						}, 
+							size: { height: placeholderNoteHeight }
+						},
 						{
 							color: assistantColor,
 							chat_role: 'assistant'
@@ -310,16 +313,14 @@ export default class ObsidianLilypad extends Plugin {
 				})
 				/*
 				*/
-				} catch (e) {
-					created.setText(`error :( ${e}`)
-					this.logDebug(`error :( : ${e}`)
-					return 
-				}
+			} catch (e) {
+				created.setText(`error :( ${e}`)
+				this.logDebug(`error :( : ${e}`)
+				return
+			}
 		}
 	}
-	async ipfsDagGet() {
-		const res = await requestUrl('http://localhost:3000/')
-		console.log('res', res)
+	async cat() {
 		if (this.unloaded) return
 
 		this.logDebug("attempting to fetch from ipfs")
@@ -358,30 +359,31 @@ export default class ObsidianLilypad extends Plugin {
 			)
 
 			try {
-				let Cid = CID.parse(String(nodeText))
-				const content = await this.dagJsonInstance.get(Cid)
-			const cidNode = createNode(canvas, created,
-				{
-					text: `${JSON.stringify(content)}`,
-					size: { height: placeholderNoteHeight }
-				},
-				{
-					color: assistantColor,
-					chat_role: 'assistant'
-				}
-			)
+				const res = await requestUrl(`http://localhost:3000/?cid=${nodeText}`)
+				console.log('res', res)
+				
+				const cidNode = createNode(canvas, created,
+					{
+						text: `${res.text}`,
+						size: { height: placeholderNoteHeight }
+					},
+					{
+						color: assistantColor,
+						chat_role: 'assistant'
+					}
+				)
 
 			} catch (e) {
-			const cideNodeError = createNode(canvas, created,
-				{
-					text: `error at ${e}`,
-					size: { height: placeholderNoteHeight }
-				},
-				{
-					color: assistantColor,
-					chat_role: 'assistant'
-				}
-			)
+				const cideNodeError = createNode(canvas, created,
+					{
+						text: `error at ${e}`,
+						size: { height: placeholderNoteHeight }
+					},
+					{
+						color: assistantColor,
+						chat_role: 'assistant'
+					}
+				)
 
 			}
 		}
@@ -429,37 +431,34 @@ export default class ObsidianLilypad extends Plugin {
 				const cid = await this.dagJsonInstance.add({
 					text: nodeText
 				})
-			const cidNode = createNode(canvas, created,
-				{
-					text: `added at ${cid.toString()}`,
-					size: { height: placeholderNoteHeight }
-				},
-				{
-					color: assistantColor,
-					chat_role: 'assistant'
-				}
-			)
+				const cidNode = createNode(canvas, created,
+					{
+						text: `added at ${cid.toString()}`,
+						size: { height: placeholderNoteHeight }
+					},
+					{
+						color: assistantColor,
+						chat_role: 'assistant'
+					}
+				)
 
 			} catch (e) {
-			const cideNodeError = createNode(canvas, created,
-				{
-					text: `error at ${e}`,
-					size: { height: placeholderNoteHeight }
-				},
-				{
-					color: assistantColor,
-					chat_role: 'assistant'
-				}
-			)
+				const cideNodeError = createNode(canvas, created,
+					{
+						text: `error at ${e}`,
+						size: { height: placeholderNoteHeight }
+					},
+					{
+						color: assistantColor,
+						chat_role: 'assistant'
+					}
+				)
 
 			}
 		}
 	}
-	async cat() {
-		
+	async ipfsDagGet() {
 		if (this.unloaded) return
-
-		this.logDebug("attempting to fetch from ipfs")
 
 		const canvas = this.getActiveCanvas()
 		if (!canvas) {
@@ -493,29 +492,39 @@ export default class ObsidianLilypad extends Plugin {
 					chat_role: 'assistant'
 				}
 			)
-			let content:string = ''
 			try {
 				console.log('waiting for ipfs. . .')
-				let Cid = CID.parse(String(nodeText))
-				console.log('Cid', Cid)
-				console.log('Cid', Cid.toString())
-				console.log(this.fs.cat(Cid))
-				for await (const buf of this.fs.cat(Cid)) {
-					console.log('buffer', buf)
-					content += this.decoder.decode(buf, {
-						stream: true
-					})
-				  }
-				console.log('for await complete')
-				created.setText(content)
+				let res = await requestUrl(`http://localhost:3000/dag?cid=${nodeText}`)
+				console.log('res', res)
+				res.json.Links.forEach((link:any) => {
+					const name = createNode(canvas, created,
+						{
+							text: `${link.Name}`,
+							size: { height: placeholderNoteHeight }
+						},
+						{
+							color: assistantColor,
+							chat_role: 'assistant'
+						}
+					)
+					createNode(canvas, name,
+						{
+							text: `${link.Hash['/']}`,
+							size: { height: placeholderNoteHeight }
+						},
+						{
+							color: assistantColor,
+							chat_role: 'assistant'
+						}
+					)
+				})
+				created.setText('success~')
 			} catch (e) {
 				this.logDebug(e)
 				console.log('ipfs fetch error: ', e)
 				created.setText(`error :( : ${e}`)
 				return
 			}
-			created.setText(content)
-
 		}
 	}
 	async runCowsay() {
@@ -561,37 +570,37 @@ export default class ObsidianLilypad extends Plugin {
 				console.log('waiting for cowsay run')
 				const tx = await this.exampleClient.runCowsay(
 					nodeText, {
-						value: ethers.parseUnits('2', 'ether')
-					}
+					value: ethers.parseUnits('2', 'ether')
+				}
 				)
 
 				console.log('tx', tx)
 				created.setText(`success! tx hash: ${tx.hash}, fetching ipfs.io cid`)
 
 				const res = await this.exampleClient.fetchAllResults()
-				const ipfsio = res[res.length -1][2]
+				const ipfsio = res[res.length - 1][2]
 				const cid = res[res.length - 1][1]
 				created.setText(`job complete see on ${ipfsio}`)
 				console.log('hmmmmmm')
 				const ipfsFetchNode = createNode(canvas, created,
 					{
 						text: `${cid}`,
-						size: {height: placeholderNoteHeight}
-					}, 
+						size: { height: placeholderNoteHeight }
+					},
 					{
 						color: assistantColor,
 						chat_role: 'assistant'
 					}
 				)
 
-				} catch (e) {
-					created.setText(`error :( ${e}`)
-					this.logDebug(`error :( : ${e}`)
-					return 
-				}
+			} catch (e) {
+				created.setText(`error :( ${e}`)
+				this.logDebug(`error :( : ${e}`)
+				return
+			}
 		}
 	}
-	
+
 	getActiveCanvas() {
 		const maybeCanvasView = this.app.workspace.getActiveViewOfType(ItemView) as CanvasView | null
 		return maybeCanvasView ? maybeCanvasView['canvas'] : null

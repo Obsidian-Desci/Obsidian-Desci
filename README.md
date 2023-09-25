@@ -1,8 +1,9 @@
-# Obsidian Sample Plugin
+# Obsidian Lilypad
+This is a [desci nodes](https://desci.com/), [lilypad](https://docs.lilypadnetwork.org/lilypad-v1-testnet/overview), [kamu](https://www.kamu.dev/) and [ipfs helia](https://github.com/ipfs/helia) plugin for Obsidian (https://obsidian.md).
 
-This is a [desci nodes](https://desci.com/), [lilypad](https://docs.lilypadnetwork.org/lilypad-v1-testnet/overview), and [ipfs helia](https://github.com/ipfs/helia) plugin for Obsidian (https://obsidian.md).
+Pull Desci nodes, stream together external apis, run edge compute jobs by calling smart contracts, and fetch from ipfs all from the obsidian canvas.
 
-Pull Desci nodes, run edge compute jobs by calling smart contracts, and fetch from ipfs all from the obsidian canvas.
+The science tech stacks is due for an upgrade to enable collaboration and composability within an interface that is familiar and easy to understand.  Obsidian Lilypad ties together technologies from the emerging decentralized science ecosystem
 
 Targeting enabling a composition pipeline for scientists that builds into their existing tools and is easy to use
 
