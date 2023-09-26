@@ -6,12 +6,10 @@ import { CID } from 'multiformats/cid'
 import { createHelia } from 'helia'
 import { dagJson } from '@helia/dag-json'
 import { dagCbor } from '@helia/dag-cbor'
-
+import cors from '@fastify/cors'
 import Fastify from 'fastify'
-import {initLibp2p} from './kubo.js'
 import debug from 'debug'
 // debug.enable('helia:*,libp2p:*')
-
 import * as IpldDagJson from '@ipld/dag-json'
 import * as IpldDagPB from '@ipld/dag-pb'
 import * as IpldDagCbor from '@ipld/dag-cbor'
@@ -19,6 +17,11 @@ import {dagPb} from './helia-dag-pb.js'
 import { unixfs } from '@helia/unixfs'
 import { sha256 } from 'multiformats/hashes/sha2'
 
+import {initLibp2p} from './kubo.js'
+import {
+   getBlockFromAnyGateway,
+
+ } from './gateway.js';
 
 let heliaNode;
 let dJson;
@@ -34,6 +37,11 @@ const fastify = Fastify({
     logger: true
 })
 
+await fastify.register(cors, { 
+  // put your options here
+  origin: 'true'
+})
+
 // @ts-check
 const getOptions = {
   schema: {
@@ -45,6 +53,37 @@ const getOptions = {
 }
 
 const mapFromCidCodeToHeliaWrapper = new Map()
+
+
+fastify.post('/gateway', getOptions, async (request, reply) => {
+  console.log(`request.query: `, request.query);
+  if (request.query.cid === undefined) {
+    reply.type('application/json').code(500)
+    return { error: 'no cid provided' }
+  }
+  let Cid = CID.parse(request.query.cid, sha256.decoder)
+  try {
+    //const block = await getBlockFromAnyGateway(Cid, new AbortController())
+    const res = fetch(`https://0.0.0.0:5001/api/v0/dag/get/${request.query.cid}`, {
+      method: 'post',
+      mode: 'no-cors',
+      headers: {
+        "Content-Type":"text/plain",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers":"X-Stream-Output, X-Chunked-Output, X-Content-Length",
+        "Access-Control-Expose-Headers": "X-Stream-Output, X-Chunked-Output, X-Content-Length",
+      }
+    }).then((res) => {
+      console.log('res', res)
+    })
+    console.log('res', res)
+  } catch (e) {
+    console.log('error:', e)
+    reply.type('application/json').code(500)
+    return { 'error': e}
+  }
+
+})
 
 
 fastify.get('/', getOptions, async (request, reply) => {

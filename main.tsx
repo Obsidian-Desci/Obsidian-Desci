@@ -406,6 +406,15 @@ export default class ObsidianLilypad extends Plugin {
 		if (node) {
 			await canvas.requestSave()
 			await sleep(200)
+			console.log('siblings', siblings)
+			let climb = true
+			while (climb) {
+				const siblings = canvas.getEdgesForNode(node)
+				siblings.forEach((n) => {
+					
+				})
+			}
+
 
 			const settings = this.settings
 
@@ -418,7 +427,7 @@ export default class ObsidianLilypad extends Plugin {
 
 			const created = createNode(canvas, node,
 				{
-					text: `adding ${nodeText} to ipfs`,
+					text: `attempting to convert tree to dag`,
 					size: { height: placeholderNoteHeight }
 				},
 				{
@@ -428,6 +437,16 @@ export default class ObsidianLilypad extends Plugin {
 			)
 
 			try {
+				/*
+				const dag = {}
+				const cid = await requestUrl({
+					url: `http://localhost:3000/add`,
+					method: 'POST',
+					body: JSON.stringify({
+						
+					})
+
+				})
 				const cid = await this.dagJsonInstance.add({
 					text: nodeText
 				})
@@ -441,7 +460,7 @@ export default class ObsidianLilypad extends Plugin {
 						chat_role: 'assistant'
 					}
 				)
-
+				*/
 			} catch (e) {
 				const cideNodeError = createNode(canvas, created,
 					{

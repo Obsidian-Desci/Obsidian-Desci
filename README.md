@@ -22,7 +22,7 @@ In a canvas, select a node and run hit Ctrl-P to search for
 - runCowsay - execute cowsay on the content of a canvas node
 - getDpid - pull a desci node from beta.dpid.org
 - runSDXL - run stable diffusion by executing a transation through lilypad
-- ipfsCAT - pull the content from a CID from ipfs
+- ipfsCat - pull the content from a CID from ipfs
 - ipfsDagGet - pull a cid that references a dag and splay the child CIds into nodes
 - ipfsAdd - Add a json object referenced by a CID
 

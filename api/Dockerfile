@@ -1,7 +1,11 @@
 FROM node:20.7-buster
-
-
 WORKDIR /app
+RUN wget https://dist.ipfs.tech/kubo/v0.22.0/kubo_v0.22.0_linux-amd64.tar.gz
+RUN tar -xvzf kubo_v0.22.0_linux-amd64.tar.gz
+RUN cd kubo
+#RUN bash install.sh
+#RUN ipfs init
+#RUN ipfs daemon
 
 # get working with macos
 RUN curl -s "https://get.kamu.dev" | sh

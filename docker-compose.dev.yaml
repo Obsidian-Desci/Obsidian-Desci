@@ -13,21 +13,6 @@ services:
       dockerfile: ./Dockerfile
     ports:
       - 3000:3000
-    volumes:
-      - ./api:/app
-      - /app/node_modules
-    command: npm run start
-
-  kubo:
-    image: ipfs/kubo:latest
-    restart: unless-stopped
-    volumes:
-      - ipfs_path:/data/ipfs
-      - ipfs_fuse:/ipfs
-      - ipns_fuse:/ipns
-    environment:
-      - IPFS_PATH=/data/ipfs
-    ports:
       # Swarm listens on all interfaces, so is remotely reachable.
       - 4001:4001/tcp
       - 4001:4001/udp
@@ -40,6 +25,13 @@ services:
 
       # HTTP Gateway
       - 127.0.0.1:8080:8080
+    volumes:
+      - ipfs_path:/data/ipfs
+      - ipfs_fuse:/ipfs
+      - ipns_fuse:/ipns
+      - ./api:/app
+      - /app/node_modules
+    command: npm run start
 
 volumes:
   ipfs_path:
