@@ -3,6 +3,7 @@ const { keccak256 } = pkg
 import { from } from 'multiformats/hashes/hasher'
 import * as sha2 from 'multiformats/hashes/sha2'
 
+
 export default async function getHasherForCode(code) {
     switch (code) {
         case sha2.sha256.code:

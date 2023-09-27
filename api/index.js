@@ -1,5 +1,6 @@
 // ESM
 import util from 'util';
+import toBuffer from 'it-to-buffer'
 import { exec as Exec } from 'child_process'
 const exec = util.promisify(Exec);
 import { CID } from 'multiformats/cid'
@@ -17,6 +18,7 @@ import {dagPb} from './helia-dag-pb.js'
 import { unixfs } from '@helia/unixfs'
 import { sha256 } from 'multiformats/hashes/sha2'
 
+import { toString as stringFromUint8Array  } from 'uint8arrays/to-string'
 import {initLibp2p} from './kubo.js'
 import {
    getBlockFromAnyGateway,
@@ -64,19 +66,38 @@ fastify.post('/gateway', getOptions, async (request, reply) => {
   let Cid = CID.parse(request.query.cid, sha256.decoder)
   try {
     //const block = await getBlockFromAnyGateway(Cid, new AbortController())
-    const res = fetch(`https://0.0.0.0:5001/api/v0/dag/get/${request.query.cid}`, {
+    const res = await fetch(`http://0.0.0.0:5001/api/v0/dag/get?arg=${request.query.cid}&encoding=json`, {
       method: 'post',
-      mode: 'no-cors',
       headers: {
-        "Content-Type":"text/plain",
+        "Content-Type": "text/plain",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers":"X-Stream-Output, X-Chunked-Output, X-Content-Length",
-        "Access-Control-Expose-Headers": "X-Stream-Output, X-Chunked-Output, X-Content-Length",
+        "Access-Control-Allow-Headers": "X-Stream-Output, X-Chunked-Output, X-Content-Length",
+        "Access-Control-Expose-Headers": "X-Stream-Output, X-Chunked-Output, X-Content-Length"
       }
-    }).then((res) => {
-      console.log('res', res)
     })
-    console.log('res', res)
+
+    //console.log('res', stringFromUint8Array(res.arrayBuffer))
+    const json = await res.json()
+    const stout = json.Links[3].Hash['/']
+    console.log('stout', stout)
+  
+    const img = await fetch(`http://0.0.0.0:5001/api/v0/cat?arg=${stout}`, {
+      method: 'post',
+      headers: {
+        "Content-Type": "text/plain",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "X-Stream-Output, X-Chunked-Output, X-Content-Length",
+        "Access-Control-Expose-Headers": "X-Stream-Output, X-Chunked-Output, X-Content-Length"
+      }
+    })
+    reply.type('img/png')
+    return blob
+
+    return n
+    const imgJson = await img.json()
+    console.log('img', imgJson)
+    reply.type('application/json').code(200)
+    return await res.json()
   } catch (e) {
     console.log('error:', e)
     reply.type('application/json').code(500)
