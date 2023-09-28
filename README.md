@@ -7,6 +7,8 @@ This is a [desci nodes](https://desci.com/), [lilypad](https://docs.lilypadnetwo
 https://create.piktochart.com/output/872ef3035912-purple-modern-status-reporting
 )
 
+[Paper](./Obsidian-Desci.pdf)
+
 Pull Desci nodes, stream together external apis, run edge compute jobs by calling smart contracts, and fetch from ipfs all from the obsidian canvas.
 
 The science tech stacks is due for an upgrade to enable collaboration and composability within an interface that is familiar and easy to understand.  Obsidian Lilypad ties together technologies from the emerging decentralized science ecosystem
@@ -42,6 +44,22 @@ In a canvas, select a node and run hit Ctrl-P to search for
 - hit the gear to open obsidian-lilypad settings, and add private key that has LILETH on the lalechuza testnet
 - Create a new canvas
 - use Ctrl-P and search the name of the command while a node is selected
+
+### Hardhat
+
+This repo has a hardhat environment under hardhat that can be used to build the Lilypad Client and run operation against the modicum contract directly
+
+- `cd ./hardhat`
+- `cp .env.example .env` and fill in your mnemonic
+
+#### commands
+`npx hardhat run ./scripts/getModuleCost.js --network lilypad` to retrieve current module costs
+
+`npx hardhat run ./scripts/runFetchResults.js --network lilypad` to return the cids of the completed runs
+
+`npx hardhat run ./scripts/runCowsay.js --network lilypad` to test the cowsay job
+
+
 
 ### add to community plugins
 ![output](https://github.com/polus-arcticus/obsidian-lilypad/assets/122753557/76b74cfb-1e0b-4c72-9b2a-5b2a163b5399)
