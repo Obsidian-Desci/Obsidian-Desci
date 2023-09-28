@@ -3,7 +3,9 @@ This is a [desci nodes](https://desci.com/), [lilypad](https://docs.lilypadnetwo
 
 [Video Demo](https://www.youtube.com/watch?v=DS2e0smviRA&ab_channel=TaylorHulsmans)
 
-
+[Pitch Deck](
+https://create.piktochart.com/output/872ef3035912-purple-modern-status-reporting
+)
 
 Pull Desci nodes, stream together external apis, run edge compute jobs by calling smart contracts, and fetch from ipfs all from the obsidian canvas.
 
