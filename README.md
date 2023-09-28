@@ -27,6 +27,7 @@ In a canvas, select a node and run hit Ctrl-P to search for
 - ipfsCat - pull the content from a CID from ipfs
 - ipfsDagGet - pull a cid that references a dag and splay the child CIds into nodes
 - ipfsAdd - Add a json object referenced by a CID
+- ipfsKuboFetch - If helia cant fetch the content, one may have better luck calling the kubo rpc
 
 ## How to use
 
@@ -34,11 +35,13 @@ In a canvas, select a node and run hit Ctrl-P to search for
 - Make sure your NodeJS is at least v16 (`node --version`).
 - `npm i` or `yarn` to install dependencies.
 - `npm run dev` to start compilation in watch mode.
-- `cd ./api` `npm i` and `npm run start` enables the restful api that handles IPFS helia
+- In a new terminal run `docker compose -f docker-compose.dev.yaml up to start the gateway api
 - In obsidian hit Ctrl-P and type 'open settings'
 - enable community plugins
 - find obsidian-lilypad in the menu (may need to hit refresh to see it)
 - hit the gear to open obsidian-lilypad settings, and add private key that has LILETH on the lalechuza testnet
+- Create a new canvas
+- use Ctrl-P and search the name of the command while a node is selected
 
 ### add to community plugins
 ![output](https://github.com/polus-arcticus/obsidian-lilypad/assets/122753557/76b74cfb-1e0b-4c72-9b2a-5b2a163b5399)
@@ -47,6 +50,10 @@ In a canvas, select a node and run hit Ctrl-P to search for
 - IpfsDagify - create a Dag of connected canvas nodes and upload to ipfs
 - IPFSremotePin - pin content by an external provider
 - runKamu - create a custom lilypad job that merges the contents of two cids that reference a database
+- Obsidian Sync IPFS - Underpin Obsidian Sync with IPFS
+- Obsidian Multiplayer - Utilize IPFS pubsub over webrtc to enable reatime multiplayer on the canvaa
+- LabDao protein folding workflow
+
 
 ```json
 {
