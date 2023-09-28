@@ -1,5 +1,7 @@
 // ESM
 import util from 'util';
+import * as nodeFs from 'fs'
+import {Buffer} from 'node:buffer'
 import toBuffer from 'it-to-buffer'
 import { exec as Exec } from 'child_process'
 const exec = util.promisify(Exec);
@@ -66,7 +68,7 @@ fastify.post('/gateway', getOptions, async (request, reply) => {
   let Cid = CID.parse(request.query.cid, sha256.decoder)
   try {
     //const block = await getBlockFromAnyGateway(Cid, new AbortController())
-    const res = await fetch(`http://0.0.0.0:5001/api/v0/dag/get?arg=${request.query.cid}&encoding=json`, {
+    const res = await fetch(`http://0.0.0.0:5001/api/v0/dag/get?arg=${request.query.cid}/outputs/&encoding=json`, {
       method: 'post',
       headers: {
         "Content-Type": "text/plain",
@@ -78,10 +80,11 @@ fastify.post('/gateway', getOptions, async (request, reply) => {
 
     //console.log('res', stringFromUint8Array(res.arrayBuffer))
     const json = await res.json()
-    const stout = json.Links[3].Hash['/']
-    console.log('stout', stout)
+    console.log('json', json)
+    const outputs = json.Links[0].Hash['/']
+    console.log('outputs', outputs)
   
-    const img = await fetch(`http://0.0.0.0:5001/api/v0/cat?arg=${stout}`, {
+    const img = await fetch(`http://0.0.0.0:5001/api/v0/cat?arg=${outputs}`, {
       method: 'post',
       headers: {
         "Content-Type": "text/plain",
@@ -90,8 +93,19 @@ fastify.post('/gateway', getOptions, async (request, reply) => {
         "Access-Control-Expose-Headers": "X-Stream-Output, X-Chunked-Output, X-Content-Length"
       }
     })
+    let buffer = ''
+
+    for await (const chunk of img.body) {
+      buffer += decoder.decode(chunk, {
+        stream: true
+      })
+    }
+    reply.type('plain/text')
+    return buffer
     reply.type('img/png')
-    return blob
+    return nodeFs.writeFile('image-0.png', buffer, (err) => {
+      console.log('err', err)
+    })
 
     return n
     const imgJson = await img.json()
@@ -140,9 +154,9 @@ fastify.get('/', getOptions, async (request, reply) => {
     let res;
     for await (const buf of fs.cat(Cid)) {
       res += decoder.decode(buf, {
-        stream: true
+      
       })
-    } 
+    }
     /*
     */
     //console.log(d.get(Cid))
@@ -150,9 +164,9 @@ fastify.get('/', getOptions, async (request, reply) => {
     const res = await d.get(Cid, {
       onProgress: (e) => console.log('progress', e)
     })
-    const res = await dCbor.get(Cid, {
+    con/t res = await dCbor.get(Cid, {
       onProgress: (e) => console.log('cbor',e )
-    }) 
+    }) /
    const res = await dPb.get(Cid, {
     onProgress: (e) => console.log('protobuffers', e)
    })
