@@ -22,6 +22,45 @@ import { sha256 } from 'multiformats/hashes/sha2'
 
 import { toString as stringFromUint8Array  } from 'uint8arrays/to-string'
 import {initLibp2p} from './kubo.js'
+
+import { Readable } from 'stream';
+import { PNG } from 'pngjs';
+import streamToBuffer from 'stream-to-buffer';
+import * as webStreamsNode from 'web-streams-node';
+
+async function convertToPng(readableStream, outputPath) {
+  const png = new PNG();
+
+  // Create a reader for the ReadableStream
+  const reader = readableStream.getReader();
+
+  // Accumulate the chunks into a buffer
+  const chunks = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  const buffer = Buffer.concat(chunks);
+
+  // Parse the buffer as a PNG image
+  png.parse(buffer, (error, data) => {
+    if (error) {
+      console.error('Error parsing PNG:', error);
+      return;
+    }
+
+    // Create a writable stream to save the PNG file
+    const writableStream = nodeFs.createWriteStream(outputPath);
+
+    // Pipe the PNG data to the writable stream
+    png.pack().pipe(writableStream);
+
+    writableStream.on('finish', () => {
+      console.log(`PNG file saved at ${outputPath}`);
+    });
+  });}
+
 import {
    getBlockFromAnyGateway,
 
@@ -94,15 +133,18 @@ fastify.post('/gateway', getOptions, async (request, reply) => {
       }
     })
     let buffer = ''
-
+    console.log(img.body)
+    const n = await convertToPng(img.body, 'image-0.png')
+    
+    /*
     for await (const chunk of img.body) {
       buffer += decoder.decode(chunk, {
         stream: true
       })
     }
-    reply.type('plain/text')
-    return buffer
+    */
     reply.type('img/png')
+    return nodeFs.readFileSync('./image-0.png')
     return nodeFs.writeFile('image-0.png', buffer, (err) => {
       console.log('err', err)
     })

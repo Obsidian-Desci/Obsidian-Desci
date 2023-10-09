@@ -439,10 +439,18 @@ export default class ObsidianLilypad extends Plugin {
 					method: 'POST'
 				})
 				console.log('res', res)
-				
+				function _arrayBufferToBase64( buffer ) {
+					var binary = '';
+					var bytes = new Uint8Array( buffer );
+					var len = bytes.byteLength;
+					for (var i = 0; i < len; i++) {
+					   binary += String.fromCharCode( bytes[ i ] );
+					}
+					return window.btoa( binary );
+				  }	
 				const cidNode = createNode(canvas, created,
 					{
-						text: `${res.text}`,
+						text: `<img src="data:image/png;base64,${_arrayBufferToBase64(res.arrayBuffer)}" />`,
 						size: { height: placeholderNoteHeight }
 					},
 					{
