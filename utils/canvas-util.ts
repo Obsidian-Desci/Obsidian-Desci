@@ -1,4 +1,4 @@
-import { ItemView } from 'obsidian'
+import { ItemView, TFile } from 'obsidian'
 import { Canvas, CanvasNode, CreateNodeOptions } from './canvas-internal'
 import { AllCanvasNodeData } from 'obsidian/canvas'
 
@@ -164,4 +164,21 @@ export const createNode = (
 	})
 
 	return newNode
+}
+
+async function readFile(path: string) {
+	const file = this.app.vault.getAbstractFileByPath(path)
+	if (file instanceof TFile) {
+		const body = await app.vault.read(file)
+		return `## ${file.basename}\n${body}`
+	}
+}
+export async function getNodeText(node: CanvasNode) {
+	const nodeData = node.getData()
+	switch (nodeData.type) {
+		case 'text':
+			return nodeData.text
+		case 'file':
+			return readFile(nodeData.file)
+	}
 }

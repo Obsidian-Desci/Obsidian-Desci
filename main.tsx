@@ -5,8 +5,12 @@ import {
 	createNode,
 	placeholderNoteHeight,
 	assistantColor,
+	getNodeText
   } from './utils/canvas-util'
-
+import { getDpid} from './desci-nodes/getDpid'
+import { runSdxl} from './lilypad/runSdxl'
+import {dagGet} from './ipfs/dagGet'
+import {kuboFetch} from './ipfs/kuboFetch'
 import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
 import ExampleClient from './artifacts/ExampleClient.json'
 
@@ -48,16 +52,12 @@ export default class ObsidianDesci extends Plugin {
 		this.addCommand({
 			id: 'runSDXL',
 			name: 'runSDXL - execute stable diffusion on a text node',
-			callback: () => {
-				this.runSDXL()
-			}
+			callback: runSdxl.bind(this)
 		});
 		this.addCommand({
 			id: 'getDpid',
 			name: 'getDpid - retreive the json of a desci nodes research object',
-			callback: () => {
-				this.getDpid()
-			}
+			callback: getDpid.bind(this)
 		});
 		this.addCommand({
 			id: 'ipfsCat',
@@ -69,9 +69,7 @@ export default class ObsidianDesci extends Plugin {
 		this.addCommand({
 			id: 'ipfsDagGet',
 			name: 'ipfsDagGet - fetch json behind a persistent identifer',
-			callback: () => {
-				this.ipfsDagGet()
-			}
+			callback: dagGet.bind(this)
 		});
 		this.addCommand({
 			id: 'ipfsAdd',
@@ -83,9 +81,7 @@ export default class ObsidianDesci extends Plugin {
 		this.addCommand({
 			id: 'ipfsKuboFetch',
 			name: 'ipfsKuboFetch - fetch a Cid from a Kubo node  ',
-			callback: () => {
-				this.ipfsKuboFetch()
-			}
+			callback: kuboFetch.bind(this)
 		});
 
 		// This creates an icon in the left ribbon.
@@ -121,142 +117,6 @@ export default class ObsidianDesci extends Plugin {
 	onunload() {
 	}
 
-
-	async getDpid() {
-		if (this.unloaded) return
-
-		this.logDebug("fetching dpid json from desci nodes")
-
-		const canvas = this.getActiveCanvas()
-		if (!canvas) {
-			this.logDebug('No active canvas')
-			return
-		}
-		const selection = canvas.selection
-		if (selection?.size !== 1) return
-		const values = Array.from(selection.values())
-		const node = values[0]
-		if (node) {
-			await canvas.requestSave()
-			await sleep(200)
-
-			const settings = this.settings
-
-			//const nodeData = node.getData()
-			let nodeText = await getNodeText(node) || ''
-			if (nodeText.length == 0) {
-				console.log('no node text')
-				this.logDebug('no node Text found')
-				return
-			}
-
-			const created = createNode(canvas, node,
-				{
-					text: `fetching dpid:  ${nodeText}`,
-					size: { height: placeholderNoteHeight }
-				},
-				{
-					color: assistantColor,
-					chat_role: 'assistant'
-				}
-			)
-			try {
-				const json = await requestUrl(`http://beta.dpid.org/${nodeText}?jsonld`)
-				console.log('json: ', json)
-				const ipfsFetchNode = createNode(canvas, created,
-					{
-						text: `${JSON.stringify(json)}`,
-						size: { height: placeholderNoteHeight }
-					},
-					{
-						color: assistantColor,
-						chat_role: 'assistant'
-					}
-				)
-
-			} catch (e) {
-				created.setText(`error :( ${e}`)
-				this.logDebug(`error :( : ${e}`)
-				return
-			}
-		}
-	}
-	async runSDXL() {
-		if (this.unloaded) return
-
-		this.logDebug("Running sdxl")
-
-		const canvas = this.getActiveCanvas()
-		if (!canvas) {
-			this.logDebug('No active canvas')
-			return
-		}
-		const selection = canvas.selection
-		if (selection?.size !== 1) return
-		const values = Array.from(selection.values())
-		const node = values[0]
-		if (node) {
-			await canvas.requestSave()
-			await sleep(200)
-
-			const settings = this.settings
-
-			//const nodeData = node.getData()
-			let nodeText = await getNodeText(node) || ''
-			if (nodeText.length == 0) {
-				console.log('no node text')
-				this.logDebug('no node Text found')
-				return
-			}
-
-			const created = createNode(canvas, node,
-				{
-					text: `Calling Lilpad sdxl with ${nodeText}`,
-					size: { height: placeholderNoteHeight }
-				},
-				{
-					color: assistantColor,
-					chat_role: 'assistant'
-				}
-			)
-			try {
-				console.log('waiting for sdxl run')
-				console.log('signer', this.signer)
-				const tx = await this.exampleClient.runSDXL(
-					nodeText, {
-					value: ethers.parseUnits('4', 'ether')
-				}
-				)
-				const receipt = await tx.wait()
-				console.log('receipt', receipt)
-
-				console.log('tx', tx)
-				created.setText(`success! tx hash: ${tx.hash}, listening for job completion`)
-				this.exampleClient.on("ReceivedJobResults", (jobId, cid) => {
-					//const res = await this.exampleClient.fetchAllResults()
-					//console.log('res', res)
-					//const ipfsio = res[res.length -1][2]
-					const ipfsFetchNode = createNode(canvas, created,
-						{
-							text: `${cid}`,
-							size: { height: placeholderNoteHeight }
-						},
-						{
-							color: assistantColor,
-							chat_role: 'assistant'
-						}
-					)
-
-				})
-				/*
-				*/
-			} catch (e) {
-				created.setText(`error :( ${e}`)
-				this.logDebug(`error :( : ${e}`)
-				return
-			}
-		}
-	}
 	async cat() {
 		if (this.unloaded) return
 
@@ -302,85 +162,6 @@ export default class ObsidianDesci extends Plugin {
 				const cidNode = createNode(canvas, created,
 					{
 						text: `${res.text}`,
-						size: { height: placeholderNoteHeight }
-					},
-					{
-						color: assistantColor,
-						chat_role: 'assistant'
-					}
-				)
-
-			} catch (e) {
-				const cideNodeError = createNode(canvas, created,
-					{
-						text: `error at ${e}`,
-						size: { height: placeholderNoteHeight }
-					},
-					{
-						color: assistantColor,
-						chat_role: 'assistant'
-					}
-				)
-
-			}
-		}
-	}
-	async ipfsKuboFetch() {
-		if (this.unloaded) return
-
-		this.logDebug("attempting to fetch from kubo node")
-
-		const canvas = this.getActiveCanvas()
-		if (!canvas) {
-			this.logDebug('No active canvas')
-			return
-		}
-		const selection = canvas.selection
-		if (selection?.size !== 1) return
-		const values = Array.from(selection.values())
-		const node = values[0]
-		if (node) {
-			await canvas.requestSave()
-			await sleep(200)
-
-			const settings = this.settings
-
-			const nodeData = node.getData()
-			let nodeText = await getNodeText(node) || ''
-			if (nodeText.length == 0) {
-				this.logDebug('no node Text found')
-				return
-			}
-
-			const created = createNode(canvas, node,
-				{
-					text: `attempting to fetch ${nodeText} from ipfs`,
-					size: { height: placeholderNoteHeight }
-				},
-				{
-					color: assistantColor,
-					chat_role: 'assistant'
-				}
-			)
-
-			try {
-				const res = await requestUrl({
-					url: `http://localhost:3000/gateway?cid=${nodeText}`,
-					method: 'POST'
-				})
-				console.log('res', res)
-				function _arrayBufferToBase64( buffer ) {
-					var binary = '';
-					var bytes = new Uint8Array( buffer );
-					var len = bytes.byteLength;
-					for (var i = 0; i < len; i++) {
-					   binary += String.fromCharCode( bytes[ i ] );
-					}
-					return window.btoa( binary );
-				  }	
-				const cidNode = createNode(canvas, created,
-					{
-						text: `<img src="data:image/png;base64,${_arrayBufferToBase64(res.arrayBuffer)}" />`,
 						size: { height: placeholderNoteHeight }
 					},
 					{
@@ -650,20 +431,3 @@ export default class ObsidianDesci extends Plugin {
 	}
 }
 
-async function getNodeText(node: CanvasNode) {
-	const nodeData = node.getData()
-	switch (nodeData.type) {
-		case 'text':
-			return nodeData.text
-		case 'file':
-			return readFile(nodeData.file)
-	}
-}
-
-async function readFile(path: string) {
-	const file = this.app.vault.getAbstractFileByPath(path)
-	if (file instanceof TFile) {
-		const body = await app.vault.read(file)
-		return `## ${file.basename}\n${body}`
-	}
-}
