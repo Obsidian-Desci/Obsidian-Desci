@@ -23,24 +23,6 @@ import { delegatedContentRouting } from '@libp2p/delegated-content-routing'
 import { type create as createKuboClient } from 'kubo-rpc-client'
 import { request } from 'http';
 
-/*
-(async function heliaAuto() {
-	const instance = await createHelia()
-	const testfs = await unixfs(instance)
-	const testDecoder = new TextDecoder()
-	let content = ''
-
-	let Cid = CID.parse(String('QmQb8JqfusoZ9opKJSrToabwCq2Vjv1JJyUPRYG6FJVg1P'))
-	for await (const buf of testfs.cat(Cid)) {
-		console.log('buffer', buf)
-		content += testDecoder.decode(buf, {
-			stream: true
-		})
-	}
-	console.log('content', content)
-})();
-*/
-
 interface ChainConfig {
 	name: string;
 	rpcUrl: string;
@@ -49,13 +31,13 @@ interface ChainConfig {
 
 // Remember to rename these classes and interfaces!
 
-interface ObsidianLilypadSettings {
+interface ObsidianDesciSettings {
 	privateKey: string;
 	chain: ChainConfig;
 	delegateKubo: boolean;
 }
 
-const DEFAULT_SETTINGS: ObsidianLilypadSettings = {
+const DEFAULT_SETTINGS: ObsidianDesciSettings = {
 	privateKey: '',
 	chain: {
 		name: 'lilypad',
@@ -65,8 +47,8 @@ const DEFAULT_SETTINGS: ObsidianLilypadSettings = {
 	delegateKubo: false
 }
 
-export default class ObsidianLilypad extends Plugin {
-	settings: ObsidianLilypadSettings;
+export default class ObsidianDesci extends Plugin {
+	settings: ObsidianDesciSettings;
 	unloaded = false
 	provider: Provider
 	wallet: Wallet
@@ -175,7 +157,7 @@ export default class ObsidianLilypad extends Plugin {
 		// This adds a complex command that can check whether the current state of the app allows execution of the command
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new ObsidianLilypadSettingTab(this.app, this));
+		this.addSettingTab(new ObsidianDesciSettingTab(this.app, this));
 
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
@@ -759,10 +741,10 @@ class SampleModal extends Modal {
 	}
 }
 
-class ObsidianLilypadSettingTab extends PluginSettingTab {
-	plugin: ObsidianLilypad;
+class ObsidianDesciSettingTab extends PluginSettingTab {
+	plugin: ObsidianDesci;
 
-	constructor(app: App, plugin: ObsidianLilypad) {
+	constructor(app: App, plugin: ObsidianDesci) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}

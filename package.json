@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-lilypad",
+  "name": "obsidian-desci",
   "version": "1.0.0",
   "description": "Run Edge Compute jobs through blockchain smart contracts with lilypad",
   "main": "main.tsx",
