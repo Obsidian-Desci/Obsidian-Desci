@@ -1,51 +1,22 @@
-import { requestUrl, App, TFile, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf } from 'obsidian';
-import { AllCanvasNodeData } from 'obsidian/canvas'
-import { CanvasView, addEdge } from './utils/canvas-util'
-
-import { Canvas, CanvasNode, CreateNodeOptions } from './utils/canvas-internal'
-import { ReactView } from './components/views/ReactView'
-import { createContext, StrictMode, useContext } from "react";
-import { createRoot, Root } from 'react-dom/client'
-import { AppContext } from 'components/context/context';
-const VIEW_TYPE_EXAMPLE = "example-view";
+import { requestUrl, App, TFile, Editor, MarkdownView, Modal, Notice, Plugin, ItemView, WorkspaceLeaf } from 'obsidian';
+import { type CanvasNode  } from './utils/canvas-internal'
+import { 
+	type CanvasView,
+	createNode,
+	placeholderNoteHeight,
+	assistantColor,
+  } from './utils/canvas-util'
 
 import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
 import ExampleClient from './artifacts/ExampleClient.json'
 
-import { initHelia } from 'initHelia'
-import { node, client } from './kubo'
-
-import { Helia, createHelia } from 'helia'
-import { unixfs, UnixFS } from '@helia/unixfs'
-import { dagJson, DAGJSON } from '@helia/dag-json';
-import { CID } from 'multiformats'
-import { delegatedContentRouting } from '@libp2p/delegated-content-routing'
-import { type create as createKuboClient } from 'kubo-rpc-client'
-import { request } from 'http';
-
-interface ChainConfig {
-	name: string;
-	rpcUrl: string;
-	chainId: number;
-}
-
+import { 
+	ObsidianDesciSettings,
+	ObsidianDesciSettingTab,
+	DEFAULT_SETTINGS
+ } from 'settings';
 // Remember to rename these classes and interfaces!
 
-interface ObsidianDesciSettings {
-	privateKey: string;
-	chain: ChainConfig;
-	delegateKubo: boolean;
-}
-
-const DEFAULT_SETTINGS: ObsidianDesciSettings = {
-	privateKey: '',
-	chain: {
-		name: 'lilypad',
-		rpcUrl: 'http://testnet.lilypadnetwork.org:8545',
-		chainId: 1337
-	},
-	delegateKubo: false
-}
 
 export default class ObsidianDesci extends Plugin {
 	settings: ObsidianDesciSettings;
@@ -55,9 +26,6 @@ export default class ObsidianDesci extends Plugin {
 	signer: Signer
 	exampleClient: ethers.Contract
 	logDebug: (...args: unknown[]) => void = () => { }
-	helia: Helia
-	fs: UnixFS
-	dagJsonInstance: DAGJSON
 	decoder: TextDecoder
 	async onload() {
 		await this.loadSettings();
@@ -70,26 +38,6 @@ export default class ObsidianDesci extends Plugin {
 		} else {
 			console.log('no private key detected, web3 not enabled')
 		}
-		/*
-		try {
-			if(this.settings.delegateKubo) {
-				this.helia = await initHelia(client)
-				console.log('helia delegate kubo')
-				this.fs = unixfs(this.helia)
-				this.dagJsonInstance = dagJson(this.helia)
-			} else {
-				console.log('starting helia without kubo')
-				this.helia = await createHelia({})
-				this.fs = unixfs(this.helia)
-				this.dagJsonInstance = dagJson(this.helia)
-			}
-			this.decoder = new TextDecoder()
-			
-		} catch (e) {
-			this.logDebug(`helia init error: ${e}`)
-		}
-		*/
-		console.log('passed helia')
 		this.addCommand({
 			id: 'runCowsay',
 			name: 'runCowsay - execute the cowsay program through a smart contract',
@@ -474,7 +422,6 @@ export default class ObsidianDesci extends Plugin {
 		if (node) {
 			await canvas.requestSave()
 			await sleep(200)
-			console.log('siblings', siblings)
 			let climb = true
 			while (climb) {
 				const siblings = canvas.getEdgesForNode(node)
@@ -719,201 +666,4 @@ async function readFile(path: string) {
 		const body = await app.vault.read(file)
 		return `## ${file.basename}\n${body}`
 	}
-}
-const calcHeight = (options: { parentHeight: number, text: string }) => {
-	const calcTextHeight = Math.round(textPaddingHeight + pxPerLine * options.text.length / (minWidth / pxPerChar))
-	return Math.max(options.parentHeight, calcTextHeight)
-}
-
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		const { contentEl } = this;
-		contentEl.setText('Woah! hot reload');
-	}
-
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
-	}
-}
-
-class ObsidianDesciSettingTab extends PluginSettingTab {
-	plugin: ObsidianDesci;
-
-	constructor(app: App, plugin: ObsidianDesci) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const { containerEl } = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName('Private Key')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your Ethereum Private Key')
-				.setValue(this.plugin.settings.privateKey)
-				.onChange(async (value) => {
-					this.plugin.settings.privateKey = value;
-					await this.plugin.saveSettings();
-				}));
-		new Setting(containerEl)
-			.setName('delegate with kubo')
-			.setDesc('if you have a ipfs daemon running in another cli, you can speed up ipfs fetch with this')
-			.addToggle((toggle) => {
-				toggle.setValue(this.plugin.settings.delegateKubo).onChange(async (value) => {
-					this.plugin.settings.delegateKubo = value
-					await this.plugin.saveSettings();
-					console.log('kubo is: ', this.plugin.settings.delegateKubo)
-				})
-			});
-	}
-}
-
-
-class ExampleView extends ItemView {
-	root: Root | null = null;
-
-	constructor(leaf: WorkspaceLeaf) {
-		super(leaf);
-	}
-
-	getViewType() {
-		return VIEW_TYPE_EXAMPLE;
-	}
-
-	getDisplayText() {
-		return "Example view";
-	}
-
-	async onOpen() {
-		this.root = createRoot(this.containerEl.children[1]);
-		this.root.render(
-			<StrictMode>
-				<AppContext.Provider value={this.app}>
-					<ReactView />,
-				</AppContext.Provider>
-			</StrictMode>,
-		);
-	}
-
-	async onClose() {
-		this.root?.unmount();
-	}
-}
-const minWidth = 360
-
-/**
- * Assumed pixel width per character
- */
-const pxPerChar = 5
-
-/** 
- * Assumed pixel height per line
- */
-const pxPerLine = 28
-
-/**
- * Assumed height of top + bottom text area padding
- */
-const textPaddingHeight = 12
-
-/**
- * Color for assistant notes: 6 == purple
- */
-const assistantColor = "6"
-
-/**
- * Margin between new notes
- */
-const newNoteMargin = 60
-
-/** 
- * Min height of new notes
- */
-const minHeight = 60
-
-/**
- * Height to use for new empty note
- */
-const emptyNoteHeight = 100
-
-/**
- * Height to use for placeholder note
- */
-const placeholderNoteHeight = 60
-
-const randomHexString = (len: number) => {
-	const t = []
-	for (let n = 0; n < len; n++) {
-		t.push((16 * Math.random() | 0).toString(16))
-	}
-	return t.join("")
-}
-const createNode = (
-	canvas: Canvas,
-	parentNode: CanvasNode,
-	nodeOptions: CreateNodeOptions,
-	nodeData?: Partial<AllCanvasNodeData>
-) => {
-	if (!canvas) {
-		throw new Error('Invalid arguments')
-	}
-
-	const { text } = nodeOptions
-	const width = nodeOptions?.size?.width || Math.max(minWidth, parentNode?.width)
-	const height = nodeOptions?.size?.height
-		|| Math.max(minHeight, (parentNode && calcHeight({ text, parentHeight: parentNode.height })))
-
-	const siblings = parent && canvas.getEdgesForNode(parentNode)
-		.filter(n => n.from.node.id == parentNode.id)
-		.map(e => e.to.node)
-	const siblingsRight = siblings && siblings.reduce((right, sib) => Math.max(right, sib.x + sib.width), 0)
-	const priorSibling = siblings[siblings.length - 1]
-
-	// Position left at right of prior sibling, otherwise aligned with parent
-	const x = siblingsRight ? siblingsRight + newNoteMargin : parentNode.x
-
-	// Position top at prior sibling top, otherwise offset below parent
-	const y = (priorSibling
-		? priorSibling.y
-		: (parentNode.y + parentNode.height + newNoteMargin))
-		// Using position=left, y value is treated as vertical center
-		+ height * 0.5
-
-	const newNode = canvas.createTextNode(
-		{
-			pos: { x, y },
-			position: 'left',
-			size: { height, width },
-			text,
-			focus: false
-		}
-	)
-
-	if (nodeData) {
-		newNode.setData(nodeData)
-	}
-
-	canvas.deselectAll()
-	canvas.addNode(newNode)
-
-	addEdge(canvas, randomHexString(16), {
-		fromOrTo: "from",
-		side: "bottom",
-		node: parentNode,
-	}, {
-		fromOrTo: "to",
-		side: "top",
-		node: newNode,
-	})
-
-	return newNode
 }

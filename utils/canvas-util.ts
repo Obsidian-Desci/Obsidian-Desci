@@ -1,5 +1,6 @@
 import { ItemView } from 'obsidian'
-import { Canvas } from './canvas-internal'
+import { Canvas, CanvasNode, CreateNodeOptions } from './canvas-internal'
+import { AllCanvasNodeData } from 'obsidian/canvas'
 
 interface CanvasEdge {
 	fromOrTo: string
@@ -15,6 +16,10 @@ export type CanvasView = ItemView & {
 	canvas: Canvas
 }
 
+const calcHeight = (options: { parentHeight: number, text: string }) => {
+	const calcTextHeight = Math.round(textPaddingHeight + pxPerLine * options.text.length / (minWidth / pxPerChar))
+	return Math.max(options.parentHeight, calcTextHeight)
+}
 /**
  * Add edge entry to canvas.
  */
@@ -47,4 +52,116 @@ export function trapError<T>(fn: (...params: unknown[]) => T) {
 			console.error(e)
 		}
 	}
+}
+
+
+
+export const minWidth = 360
+
+/**
+ * Assumed pixel width per character
+ */
+export const pxPerChar = 5
+
+/** 
+ * Assumed pixel height per line
+ */
+export const pxPerLine = 28
+
+/**
+ * Assumed height of top + bottom text area padding
+ */
+export const textPaddingHeight = 12
+
+/**
+ * Color for assistant notes: 6 == purple
+ */
+export const assistantColor = "6"
+
+/**
+ * Margin between new notes
+ */
+export const newNoteMargin = 60
+
+/** 
+ * Min height of new notes
+ */
+export const minHeight = 60
+
+/**
+ * Height to use for new empty note
+ */
+export const emptyNoteHeight = 100
+
+/**
+ * Height to use for placeholder note
+ */
+export const placeholderNoteHeight = 60
+
+const randomHexString = (len: number) => {
+	const t = []
+	for (let n = 0; n < len; n++) {
+		t.push((16 * Math.random() | 0).toString(16))
+	}
+	return t.join("")
+}
+export const createNode = (
+	canvas: Canvas,
+	parentNode: CanvasNode,
+	nodeOptions: CreateNodeOptions,
+	nodeData?: Partial<AllCanvasNodeData>
+) => {
+	if (!canvas) {
+		throw new Error('Invalid arguments')
+	}
+
+	const { text } = nodeOptions
+	const width = nodeOptions?.size?.width || Math.max(minWidth, parentNode?.width)
+	const height = nodeOptions?.size?.height
+		|| Math.max(minHeight, (parentNode && calcHeight({ text, parentHeight: parentNode.height })))
+
+	const siblings = parent && canvas.getEdgesForNode(parentNode)
+		.filter(n => n.from.node.id == parentNode.id)
+		.map(e => e.to.node)
+	const siblingsRight = siblings && siblings.reduce((right, sib) => Math.max(right, sib.x + sib.width), 0)
+	const priorSibling = siblings[siblings.length - 1]
+
+	// Position left at right of prior sibling, otherwise aligned with parent
+	const x = siblingsRight ? siblingsRight + newNoteMargin : parentNode.x
+
+	// Position top at prior sibling top, otherwise offset below parent
+	const y = (priorSibling
+		? priorSibling.y
+		: (parentNode.y + parentNode.height + newNoteMargin))
+		// Using position=left, y value is treated as vertical center
+		+ height * 0.5
+
+	const newNode = canvas.createTextNode(
+		{
+			pos: { x, y },
+			position: 'left',
+			size: { height, width },
+			text,
+			focus: false
+		}
+	)
+
+	if (nodeData) {
+		newNode.setData(nodeData)
+	}
+
+	canvas.deselectAll()
+	canvas.addNode(newNode)
+
+	addEdge(canvas, randomHexString(16), {
+		fromOrTo: "from",
+		side: "bottom",
+		node: parentNode,
+	}, {
+		fromOrTo: "to",
+		side: "top",
+		node: newNode,
+	})
+
+	return newNode
 }
