@@ -53,6 +53,12 @@ const formatDataset = (dpid: string, node:any) => {
 	return `# ${name}\n#dpid/${dpid}/Dataset\n${keywords}\n${description}\n${discussionUrl}\n[Browse in IPFS](${url})`
 }
 
+const formatPerson = (dpid: string, node:any) => {
+	const name = node.name ? node.name : 'Anonymous'
+	const id = node['@id'] ? node['@id'] : null
+	return `# ${name}\n#dpid/${dpid}/Person\n\n${id ? `[go to Person](${id})`: ''}`
+}
+
 export const getDpid = async function () {
 	console.log('this', this)
 	if (this.unloaded) return
@@ -118,14 +124,14 @@ export const getDpid = async function () {
 				if (leaf['@type'] === 'Person') {
 					createNode(canvas, metadataNode,
 						{
-							text: `${JSON.stringify(leaf)}`,
-							size: { height: placeholderNoteHeight }
+							text: `${formatPerson(nodeText, leaf)}`,
+							size: { height: placeholderNoteHeight*2.0 }
 						},
 						{
 							color: assistantColor,
 							chat_role: 'assistant'
 						},
-						{ x: 0, y: -100 }
+						{ x: i%2 === 0 ? -100 : -300 , y: -175 }
 					)
 				} else {
 					if (leaf['@id'] === 'ro-crate-metadata.json' || leaf['@id'] === './') {
