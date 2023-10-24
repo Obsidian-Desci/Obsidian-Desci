@@ -10,7 +10,48 @@ import {
 import { AllCanvasNodeData } from 'obsidian/canvas'
 
 
+const formatHomeNode = (dpid:string, node:any) => {
+	return `# ${node.name}\n#dpid/${dpid}\n\n[Browse in Desci Nodes](${node.url})`
+}
 
+const formatCreativeWork = (dpid:string, node:any) => {
+	const name = node.name ? node.name : 'No Name'
+	const description = node.description ? node.description : 'No Description'
+	const url = `https://ipfs.desci.com/ipfs/${node['/']}`
+	const keywords = node.keywords ? (
+		node.keywords.split(', ').map((word:string) => `#${word.replace(' ', '_')}`).join(' ')
+		) : ''
+
+	return `# ${name}\n#dpid/${dpid}/Creative_Work\n${keywords}\n${description}\n[Browse in Ipfs](${url})`
+}
+
+const formatWebSite = (dpid: string,node:any) => {
+	const name = node.name ? node.name : 'No Name'
+	const url = node.url ? node.url : 'No URL'
+	return `# ${name}\n#dpid/${dpid}/Web_Site\n\n[go to Web Site](${url})`
+}
+
+const formatSoftwareSourceCode = (dpid: string, node:any) => {
+	const name = node.name ? node.name : 'No Name'
+	const url = `https://ipfs.desci.com/ipfs/${node['/']}`
+	const description = node.description ? node.description : 'No Description'
+	const discussionUrl = node.discussionUrl ? node.discussionUrl : 'No Discussion URL'
+	const keywords = node.keywords ? (
+		node.keywords.split(', ').map((word:string) => `#${word.replace(' ', '_')}`).join(' ')
+		) : ''
+	return `# ${name}\n#dpid/${dpid}/Software_Source_Code\n${keywords}\n${description}\n${discussionUrl}\n[go to Software Source Code](${url})`
+}
+
+const formatDataset = (dpid: string, node:any) => {
+	const name = node.name ? node.name : 'No Name'
+	const url = `https://ipfs.desci.com/ipfs/${node['/']}`
+	const description = node.description ? node.description : 'No Description'
+	const discussionUrl = node.discussionUrl ? node.discussionUrl : 'No Discussion URL'
+	const keywords = node.keywords ? (
+		node.keywords.split(', ').map((word:string) => `#${word.replace(' ', '_')}`).join(' ')
+		) : ''
+	return `# ${name}\n#dpid/${dpid}/Dataset\n${keywords}\n${description}\n${discussionUrl}\n[Browse in IPFS](${url})`
+}
 
 export const getDpid = async function () {
 	console.log('this', this)
@@ -42,7 +83,7 @@ export const getDpid = async function () {
 		const created = createNode(canvas, node,
 			{
 				text: `fetching dpid:  ${nodeText}`,
-				size: { height: placeholderNoteHeight }
+				size: { height: placeholderNoteHeight*2 }
 			},
 			{
 				color: assistantColor,
@@ -67,21 +108,12 @@ export const getDpid = async function () {
 				},
 				{ x: -400, y: 0 }
 			)
-			const rootNode = createNode(canvas, created,
-				{
-					text: `${JSON.stringify(
-						res.json['@graph'].find((leaf) => {
-							return leaf['@id'] === './root'
-						})
-					)}`,
-					size: { height: placeholderNoteHeight }
-				},
-				{
-					color: assistantColor,
-					chat_role: 'assistant'
-				},
-				{ x: 400, y: 0 }
-			)
+
+			created.setText(formatHomeNode(nodeText,
+				res.json['@graph'].find((leaf) => {
+					return leaf['@id'] === './'
+				})
+			))
 			res.json['@graph'].forEach((leaf, i) => {
 				if (leaf['@type'] === 'Person') {
 					createNode(canvas, metadataNode,
@@ -96,20 +128,37 @@ export const getDpid = async function () {
 						{ x: 0, y: -100 }
 					)
 				} else {
-					if (leaf['@id'] === 'ro-crate-metadata.json' || leaf['@id'] === './root') {
+					if (leaf['@id'] === 'ro-crate-metadata.json' || leaf['@id'] === './') {
 					} else {
-						createNode(canvas, rootNode,
+						let formattedContent: string = '';
+						switch (leaf['@type']) {
+							case 'CreativeWork':
+								formattedContent = formatCreativeWork(nodeText, leaf)
+								break;
+							case 'WebSite':
+								formattedContent = formatWebSite(nodeText, leaf)
+								break;
+							case 'SoftwareSourceCode':
+								formattedContent = formatSoftwareSourceCode(nodeText, leaf)
+								break;
+							case 'Dataset':
+								formattedContent = formatDataset(nodeText, leaf)
+								break;
+							default:
+								formattedContent = JSON.stringify(leaf)
+						}
+						createNode(canvas, created,
 							{
-								text: `${JSON.stringify(leaf)}`,
-								size: { height: placeholderNoteHeight }
+								text: `${formattedContent}`,
+								size: { height: placeholderNoteHeight*3 }
 							},
 							{
 								color: assistantColor,
 								chat_role: 'assistant'
 							},
-							{ x: 0, y: -100 }
+							{ x: i%2 === 0 ? 100 : 300 , y: -250 }
 						)
-					} 
+					}
 				}
 			})
 
