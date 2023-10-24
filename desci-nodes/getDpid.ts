@@ -9,7 +9,9 @@ import {
 } from '../utils/canvas-util'
 import { AllCanvasNodeData } from 'obsidian/canvas'
 
-
+const mapKeywordsToTags = (keywords: string) => {
+	return keywords.split(', ').map((word:string) => `#${word.replace(/ /g, '_')}`).join(' ')
+}
 const formatHomeNode = (dpid:string, node:any) => {
 	return `# ${node.name}\n#dpid/${dpid}\n\n[Browse in Desci Nodes](${node.url})`
 }
@@ -18,9 +20,7 @@ const formatCreativeWork = (dpid:string, node:any) => {
 	const name = node.name ? node.name : 'No Name'
 	const description = node.description ? node.description : 'No Description'
 	const url = `https://ipfs.desci.com/ipfs/${node['/']}`
-	const keywords = node.keywords ? (
-		node.keywords.split(', ').map((word:string) => `#${word.replace(' ', '_')}`).join(' ')
-		) : ''
+	const keywords = node.keywords ? mapKeywordsToTags(node.keywords) : ''
 
 	return `# ${name}\n#dpid/${dpid}/Creative_Work\n${keywords}\n${description}\n[Browse in Ipfs](${url})`
 }
@@ -36,9 +36,7 @@ const formatSoftwareSourceCode = (dpid: string, node:any) => {
 	const url = `https://ipfs.desci.com/ipfs/${node['/']}`
 	const description = node.description ? node.description : 'No Description'
 	const discussionUrl = node.discussionUrl ? node.discussionUrl : 'No Discussion URL'
-	const keywords = node.keywords ? (
-		node.keywords.split(', ').map((word:string) => `#${word.replace(' ', '_')}`).join(' ')
-		) : ''
+	const keywords = node.keywords ? mapKeywordsToTags(node.keywords) : ''
 	return `# ${name}\n#dpid/${dpid}/Software_Source_Code\n${keywords}\n${description}\n${discussionUrl}\n[go to Software Source Code](${url})`
 }
 
@@ -47,9 +45,7 @@ const formatDataset = (dpid: string, node:any) => {
 	const url = `https://ipfs.desci.com/ipfs/${node['/']}`
 	const description = node.description ? node.description : 'No Description'
 	const discussionUrl = node.discussionUrl ? node.discussionUrl : 'No Discussion URL'
-	const keywords = node.keywords ? (
-		node.keywords.split(', ').map((word:string) => `#${word.replace(' ', '_')}`).join(' ')
-		) : ''
+	const keywords = node.keywords ? mapKeywordsToTags(node.keywords) : ''
 	return `# ${name}\n#dpid/${dpid}/Dataset\n${keywords}\n${description}\n${discussionUrl}\n[Browse in IPFS](${url})`
 }
 
