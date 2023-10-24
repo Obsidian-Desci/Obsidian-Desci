@@ -109,8 +109,11 @@ export const createNode = (
 	canvas: Canvas,
 	parentNode: CanvasNode,
 	nodeOptions: CreateNodeOptions,
-	nodeData?: Partial<AllCanvasNodeData>
+	nodeData?: Partial<AllCanvasNodeData>,
+	offset?: {x: number, y: number}
 ) => {
+
+	offset = offset ? offset : {x:0, y:0}
 	if (!canvas) {
 		throw new Error('Invalid arguments')
 	}
@@ -127,14 +130,14 @@ export const createNode = (
 	const priorSibling = siblings[siblings.length - 1]
 
 	// Position left at right of prior sibling, otherwise aligned with parent
-	const x = siblingsRight ? siblingsRight + newNoteMargin : parentNode.x
+	const x = siblingsRight ? siblingsRight + newNoteMargin : parentNode.x + offset.x
 
 	// Position top at prior sibling top, otherwise offset below parent
 	const y = (priorSibling
 		? priorSibling.y
 		: (parentNode.y + parentNode.height + newNoteMargin))
 		// Using position=left, y value is treated as vertical center
-		+ height * 0.5
+		+ height * 0.5 - offset.y
 
 	const newNode = canvas.createTextNode(
 		{
