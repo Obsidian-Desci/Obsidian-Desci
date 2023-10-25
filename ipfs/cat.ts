@@ -7,9 +7,9 @@ import {
     getNodeText
 } from '../utils/canvas-util'
 
+import {CID} from 'multiformats/cid'
 
 export const cat = async function () {
-
     if (this.unloaded) return
 
     this.logDebug("attempting to fetch from ipfs")
@@ -48,9 +48,14 @@ export const cat = async function () {
         )
 
         try {
-            const res = await requestUrl(`http://localhost:3000/?cid=${nodeText}`)
+            const res = await requestUrl({
+                url: `${this.settings.kuboRpc}/cat?arg=${nodeText}`, 
+                method: 'POST',
+                headers: {
+                    "Content-Type": "text/plain",
+                }
+            })
             console.log('res', res)
-
             const cidNode = createNode(canvas, created,
                 {
                     text: `${res.text}`,
@@ -62,10 +67,11 @@ export const cat = async function () {
                 }
             )
 
+
         } catch (e) {
             const cideNodeError = createNode(canvas, created,
                 {
-                    text: `error at ${e}`,
+                    text: `error at ${e}\n is your kubo node on at ${this.settings.kuboRpc}?`,
                     size: { height: placeholderNoteHeight }
                 },
                 {

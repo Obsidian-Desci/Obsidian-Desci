@@ -43,7 +43,14 @@ export const dagGet = async function () {
         )
         try {
             console.log('waiting for ipfs. . .')
-            let res = await requestUrl(`http://localhost:3000/dag?cid=${nodeText}`)
+
+            const res = await requestUrl({
+                url: `${this.settings.kuboRpc}/dag/get?arg=${nodeText}`, 
+                method: 'POST',
+                headers: {
+                    "Content-Type": "text/plain",
+                }
+            })
             console.log('res', res)
             res.json.Links.forEach((link: any) => {
                 const name = createNode(canvas, created,
@@ -70,7 +77,7 @@ export const dagGet = async function () {
             created.setText('success~')
         } catch (e) {
             this.logDebug(e)
-            console.log('ipfs fetch error: ', e)
+            console.log('ipfs fetch error: ', e, `\n is your kubo node on at ${this.settings.kuboRpc}`)
             created.setText(`error :( : ${e}`)
             return
         }

@@ -1,4 +1,4 @@
-import { requestUrl, App, TFile, Editor, MarkdownView, Modal, Notice, Plugin, ItemView, WorkspaceLeaf } from 'obsidian';
+import { Notice, Plugin, ItemView } from 'obsidian';
 import { 
 	type CanvasView,
   } from './utils/canvas-util'
@@ -11,6 +11,10 @@ import {cat} from './ipfs/cat'
 import {add} from './ipfs/add'
 import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
 import ExampleClient from './artifacts/ExampleClient.json'
+
+import { createHelia, type Helia } from 'helia';
+import { unixfs, type UnixFS} from '@helia/unixfs'
+import { dagJson, type DAGJSON } from '@helia/dag-json';
 
 import { 
 	ObsidianDesciSettings,
@@ -28,7 +32,6 @@ export default class ObsidianDesci extends Plugin {
 	signer: Signer
 	exampleClient: ethers.Contract
 	logDebug: (...args: unknown[]) => void = () => { }
-	decoder: TextDecoder
 	async onload() {
 		await this.loadSettings();
 		this.provider = new JsonRpcProvider(this.settings.chain.rpcUrl)
@@ -39,6 +42,11 @@ export default class ObsidianDesci extends Plugin {
 			this.exampleClient = new ethers.Contract(ExampleClient.address, ExampleClient.abi, this.signer)
 		} else {
 			console.log('no private key detected, web3 not enabled')
+		}
+		if (this.settings.useEngine) {
+
+		} else {
+			console.log('Engine not enabled')
 		}
 		this.addCommand({
 			id: 'runCowsay',
