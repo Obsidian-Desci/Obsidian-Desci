@@ -70,7 +70,7 @@ export interface Canvas {
 
 export interface CreateNodeOptions {
 	text?: string,
-	file?: TFile,
+	file?: TFile | undefined,
 	subpath?: string,
 	pos?: { x: number, y: number }
 	position?: 'left' | 'right' | 'top' | 'bottom',

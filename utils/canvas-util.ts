@@ -118,7 +118,6 @@ export const createNode = (
 		throw new Error('Invalid arguments')
 	}
 	const text = nodeOptions.text ? nodeOptions.text : ''
-	const file = nodeOptions.file ? nodeOptions.file : ''
 	const nodeType =  text.length > 0 ? 'text': 'file'
 
 	const width = nodeOptions?.size?.width || Math.max(minWidth, parentNode?.width)
@@ -158,7 +157,7 @@ export const createNode = (
 				pos: { x, y },
 				position: 'left',
 				size: { height, width },
-				file,
+				file: nodeOptions.file,
 				//nodeOptions.subpath,
 				focus: false
 			}

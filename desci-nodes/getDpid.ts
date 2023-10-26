@@ -66,8 +66,8 @@ export const getDpid = async function () {
 	}
 	const selection = canvas.selection
 	if (selection?.size !== 1) return
-	const values = Array.from(selection.values())
-	const node = values[0]
+	const values: CanvasNode[] = Array.from(selection.values())
+	const node: CanvasNode = values[0]
 	if (node) {
 		await canvas.requestSave()
 		await sleep(200)
@@ -98,7 +98,7 @@ export const getDpid = async function () {
 			const metadataNode = createNode(canvas, created,
 				{
 					text: `${JSON.stringify(
-						res.json['@graph'].find((leaf) => {
+						res.json['@graph'].find((leaf:any) => {
 							return leaf['@id'] === 'ro-crate-metadata.json'
 						})
 					)}`,
@@ -112,11 +112,11 @@ export const getDpid = async function () {
 			)
 
 			created.setText(formatHomeNode(nodeText,
-				res.json['@graph'].find((leaf) => {
+				res.json['@graph'].find((leaf:any) => {
 					return leaf['@id'] === './'
 				})
 			))
-			res.json['@graph'].forEach((leaf, i) => {
+			res.json['@graph'].forEach((leaf:any, i:number) => {
 				if (leaf['@type'] === 'Person') {
 					createNode(canvas, metadataNode,
 						{

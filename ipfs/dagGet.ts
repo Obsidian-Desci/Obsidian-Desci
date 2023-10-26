@@ -1,5 +1,5 @@
 import { requestUrl } from 'obsidian'
-
+import { CanvasNode } from 'utils/canvas-internal'
 import {
     createNode,
     placeholderNoteHeight,
@@ -16,8 +16,8 @@ export const dagGet = async function () {
     }
     const selection = canvas.selection
     if (selection?.size !== 1) return
-    const values = Array.from(selection.values())
-    const node = values[0]
+    const values: CanvasNode[] = Array.from(selection.values())
+    const node: CanvasNode = values[0]
     if (node) {
         await canvas.requestSave()
         await sleep(200)

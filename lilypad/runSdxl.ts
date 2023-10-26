@@ -4,6 +4,7 @@ import {
     assistantColor,
     getNodeText
 } from '../utils/canvas-util'
+import { CanvasNode } from 'utils/canvas-internal'
 import { ethers } from 'ethers'
 export const runSdxl = async function () {
     if (this.unloaded) return
@@ -17,8 +18,8 @@ export const runSdxl = async function () {
     }
     const selection = canvas.selection
     if (selection?.size !== 1) return
-    const values = Array.from(selection.values())
-    const node = values[0]
+    const values: CanvasNode[] = Array.from(selection.values())
+    const node: CanvasNode = values[0]
     if (node) {
         await canvas.requestSave()
         await sleep(200)
@@ -56,7 +57,7 @@ export const runSdxl = async function () {
 
             console.log('tx', tx)
             created.setText(`success! tx hash: ${tx.hash}, listening for job completion`)
-            this.exampleClient.on("ReceivedJobResults", (jobId, cid) => {
+            this.exampleClient.on("ReceivedJobResults", (jobId:string, cid:string) => {
                 //const res = await this.exampleClient.fetchAllResults()
                 //console.log('res', res)
                 //const ipfsio = res[res.length -1][2]

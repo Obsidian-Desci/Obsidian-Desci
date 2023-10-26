@@ -6,15 +6,10 @@ import { getDpid } from './desci-nodes/getDpid'
 import { runSdxl } from './lilypad/runSdxl'
 import { runCowsay } from 'lilypad/runCowsay';
 import {dagGet} from './ipfs/dagGet'
-import {kuboFetch} from './ipfs/kuboFetch'
 import {cat} from './ipfs/cat'
 import {add} from './ipfs/add'
 import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
 import ExampleClient from './artifacts/ExampleClient.json'
-
-import { createHelia, type Helia } from 'helia';
-import { unixfs, type UnixFS} from '@helia/unixfs'
-import { dagJson, type DAGJSON } from '@helia/dag-json';
 
 import { 
 	ObsidianDesciSettings,
@@ -77,11 +72,6 @@ export default class ObsidianDesci extends Plugin {
 			id: 'ipfsAdd',
 			name: 'ipfsAdd - Add Json objects referenced by CID',
 			callback: add.bind(this)
-		});
-		this.addCommand({
-			id: 'ipfsKuboFetch',
-			name: 'ipfsKuboFetch - fetch a Cid from a Kubo node  ',
-			callback: kuboFetch.bind(this)
 		});
 
 		// This creates an icon in the left ribbon.
