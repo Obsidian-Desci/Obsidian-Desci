@@ -9,7 +9,7 @@ Web3 x Obsidian.md x DeSci
 
 Pull From IPFS, Run Edge Compute Jobs by Calling Smart Contracts, Fetch Desci Nodes, and more to come!
 
-📚 [Read the Docs](obsidian-desci.github.io/Docs/)
+📚 [Read the Docs](https://obsidian-desci.github.io/Docs/)
 
 🎥 [Watch tutorial videos](https://www.youtube.com/@Obsidian-Desci-fs7uw)
 
