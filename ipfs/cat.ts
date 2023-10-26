@@ -1,5 +1,6 @@
-import { requestUrl } from 'obsidian'
-
+import { requestUrl, Vault } from 'obsidian'
+import * as fs from 'fs'
+console.log('fs', fs)
 import {
     createNode,
     placeholderNoteHeight,
@@ -7,7 +8,7 @@ import {
     getNodeText
 } from '../utils/canvas-util'
 
-import {CID} from 'multiformats/cid'
+import { CID } from 'multiformats/cid'
 
 export const cat = async function () {
     if (this.unloaded) return
@@ -49,23 +50,48 @@ export const cat = async function () {
 
         try {
             const res = await requestUrl({
-                url: `${this.settings.kuboRpc}/cat?arg=${nodeText}`, 
+                url: `${this.settings.kuboRpc}/cat?arg=${nodeText}`,
                 method: 'POST',
                 headers: {
-                    "Content-Type": "text/plain",
+                    //"Content-Type": "text/plain",
                 }
             })
             console.log('res', res)
-            const cidNode = createNode(canvas, created,
-                {
-                    text: `${res.text}`,
-                    size: { height: placeholderNoteHeight }
-                },
-                {
-                    color: assistantColor,
-                    chat_role: 'assistant'
-                }
-            )
+            if (res.text.startsWith('�PNG')) {
+
+                const buffer = Buffer.from(res.arrayBuffer);
+                fs.writeFile(`${this.app.vault.adapter.basePath}/${nodeText}.png`, buffer, 'base64', (error) => {
+                    if (error) {
+                        console.error('Error saving image:', error);
+                    } else {
+                        console.log(`Image file saved at ${nodeText}.png`);
+                        const file = this.app.vault.getAbstractFileByPath(`${nodeText}.png`)
+                        console.log('file', file)
+                        const cidNode = createNode(canvas, created,
+                            {
+                                file,
+                                size: { height: placeholderNoteHeight }
+                            },
+                            {
+                                color: assistantColor,
+                                chat_role: 'assistant'
+                            }
+                        )
+                    }
+                });
+                console.log('canvas', canvas)
+            } else {
+                const cidNode = createNode(canvas, created,
+                    {
+                        text: `${res.text}`,
+                        size: { height: placeholderNoteHeight }
+                    },
+                    {
+                        color: assistantColor,
+                        chat_role: 'assistant'
+                    }
+                )
+            }
 
 
         } catch (e) {

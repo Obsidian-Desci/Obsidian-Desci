@@ -1,4 +1,4 @@
-import { App } from 'obsidian'
+import { App, TFile} from 'obsidian'
 import { AllCanvasNodeData, CanvasData } from 'obsidian/canvas'
 
 export interface CanvasNode {
@@ -57,6 +57,7 @@ export interface Canvas {
 	wrapperEl: HTMLElement | null
 	addNode(node: CanvasNode): void
 	createTextNode(options: CreateNodeOptions): CanvasNode
+	createFileNode(options: CreateNodeOptions): CanvasNode
 	deselectAll(): void
 	getData(): CanvasData
 	getEdgesForNode(node: CanvasNode): CanvasEdge[]
@@ -68,7 +69,9 @@ export interface Canvas {
 }
 
 export interface CreateNodeOptions {
-	text: string,
+	text?: string,
+	file?: TFile,
+	subpath?: string,
 	pos?: { x: number, y: number }
 	position?: 'left' | 'right' | 'top' | 'bottom',
 	size?: { height?: number, width?: number },

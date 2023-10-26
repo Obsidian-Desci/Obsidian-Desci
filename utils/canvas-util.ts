@@ -117,8 +117,10 @@ export const createNode = (
 	if (!canvas) {
 		throw new Error('Invalid arguments')
 	}
+	const text = nodeOptions.text ? nodeOptions.text : ''
+	const file = nodeOptions.file ? nodeOptions.file : ''
+	const nodeType =  text.length > 0 ? 'text': 'file'
 
-	const { text } = nodeOptions
 	const width = nodeOptions?.size?.width || Math.max(minWidth, parentNode?.width)
 	const height = nodeOptions?.size?.height
 		|| Math.max(minHeight, (parentNode && calcHeight({ text, parentHeight: parentNode.height })))
@@ -139,15 +141,30 @@ export const createNode = (
 		// Using position=left, y value is treated as vertical center
 		+ height * 0.5 - offset.y
 
-	const newNode = canvas.createTextNode(
-		{
-			pos: { x, y },
-			position: 'left',
-			size: { height, width },
-			text,
-			focus: false
-		}
-	)
+	let newNode: CanvasNode;
+	if (nodeType === 'text') {
+		newNode = canvas.createTextNode(
+			{
+				pos: { x, y },
+				position: 'left',
+				size: { height, width },
+				text,
+				focus: false
+			}
+		)
+	} else {
+		newNode = canvas.createFileNode(
+			{
+				pos: { x, y },
+				position: 'left',
+				size: { height, width },
+				file,
+				//nodeOptions.subpath,
+				focus: false
+			}
+		)
+
+	}
 
 	if (nodeData) {
 		newNode.setData(nodeData)
