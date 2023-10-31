@@ -1,6 +1,6 @@
 import { requestUrl } from 'obsidian'
 import { type CanvasNode } from '../utils/canvas-internal'
-import type ObsidianDecsiPlugin from '../main'
+import type ObsidianDecsiPlugin from '../../main'
 import {
 	createNode,
 	placeholderNoteHeight,
@@ -56,7 +56,6 @@ const formatPerson = (dpid: string, node:any) => {
 }
 
 export const getDpid = async function () {
-	console.log('this', this)
 	if (this.unloaded) return
 	this.logDebug("fetching dpid json from desci nodes")
 	const canvas = this.getActiveCanvas()
@@ -77,7 +76,6 @@ export const getDpid = async function () {
 		//const nodeData = node.getData()
 		let nodeText = await getNodeText(node) || ''
 		if (nodeText.length == 0) {
-			console.log('no node text')
 			this.logDebug('no node Text found')
 			return
 		}
@@ -94,7 +92,6 @@ export const getDpid = async function () {
 		)
 		try {
 			const res = await requestUrl(`http://beta.dpid.org/${nodeText}?jsonld`)
-			console.log('res.json', res.json)
 			const metadataNode = createNode(canvas, created,
 				{
 					text: `${JSON.stringify(

@@ -1,7 +1,6 @@
 import { requestUrl, Vault } from 'obsidian'
-import { CanvasNode } from 'utils/canvas-internal'
+import { CanvasNode } from 'src/utils/canvas-internal'
 import * as fs from 'fs'
-console.log('fs', fs)
 import {
     createNode,
     placeholderNoteHeight,
@@ -57,7 +56,6 @@ export const cat = async function () {
                     //"Content-Type": "text/plain",
                 }
             })
-            console.log('res', res)
             if (res.text.startsWith('�PNG')) {
 
                 const buffer = Buffer.from(res.arrayBuffer);
@@ -65,9 +63,7 @@ export const cat = async function () {
                     if (error) {
                         console.error('Error saving image:', error);
                     } else {
-                        console.log(`Image file saved at ${nodeText}.png`);
                         const file = this.app.vault.getAbstractFileByPath(`${nodeText}.png`)
-                        console.log('file', file)
                         const cidNode = createNode(canvas, created,
                             {
                                 file,
@@ -80,7 +76,6 @@ export const cat = async function () {
                         )
                     }
                 });
-                console.log('canvas', canvas)
             } else {
                 const cidNode = createNode(canvas, created,
                     {

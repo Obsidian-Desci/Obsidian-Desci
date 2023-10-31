@@ -1,5 +1,5 @@
 import { requestUrl } from 'obsidian'
-import { CanvasNode } from 'utils/canvas-internal'
+import { CanvasNode } from 'src/utils/canvas-internal'
 import {
     createNode,
     placeholderNoteHeight,
@@ -7,12 +7,10 @@ import {
     getNodeText
 } from '../utils/canvas-util'
 
-import {ethers} from 'ethers'
-export const runCowsay = async function () {
-    console.log('unloaded status: ', this.unloaded)
+export const add = async function () {
     if (this.unloaded) return
 
-    this.logDebug("Running Cowsay")
+    this.logDebug("attempting to fetch from ipfs")
 
     const canvas = this.getActiveCanvas()
     if (!canvas) {
@@ -26,20 +24,27 @@ export const runCowsay = async function () {
     if (node) {
         await canvas.requestSave()
         await sleep(200)
+        let climb = true
+        while (climb) {
+            const siblings = canvas.getEdgesForNode(node)
+            siblings.forEach((n:any) => {
+
+            })
+        }
+
 
         const settings = this.settings
 
         const nodeData = node.getData()
         let nodeText = await getNodeText(node) || ''
         if (nodeText.length == 0) {
-            console.log('no node text')
             this.logDebug('no node Text found')
             return
         }
 
         const created = createNode(canvas, node,
             {
-                text: `Calling Lilpad Cowsay with ${nodeText}`,
+                text: `attempting to convert tree to dag`,
                 size: { height: placeholderNoteHeight }
             },
             {
@@ -47,25 +52,36 @@ export const runCowsay = async function () {
                 chat_role: 'assistant'
             }
         )
+
         try {
-            console.log('waiting for cowsay run')
-            const tx = await this.exampleClient.runCowsay(
-                nodeText, {
-                value: ethers.parseUnits('2', 'ether')
-            }
-            )
+            /*
+            const dag = {}
+            const cid = await requestUrl({
+                url: `http://localhost:3000/add`,
+                method: 'POST',
+                body: JSON.stringify({
+                	
+                })
 
-            console.log('tx', tx)
-            created.setText(`success! tx hash: ${tx.hash}, fetching ipfs.io cid`)
-
-            const res = await this.exampleClient.fetchAllResults()
-            const ipfsio = res[res.length - 1][2]
-            const cid = res[res.length - 1][1]
-            created.setText(`job complete see on ${ipfsio}`)
-            console.log('hmmmmmm')
-            const ipfsFetchNode = createNode(canvas, created,
+            })
+            const cid = await this.dagJsonInstance.add({
+                text: nodeText
+            })
+            const cidNode = createNode(canvas, created,
                 {
-                    text: `${cid}`,
+                    text: `added at ${cid.toString()}`,
+                    size: { height: placeholderNoteHeight }
+                },
+                {
+                    color: assistantColor,
+                    chat_role: 'assistant'
+                }
+            )
+            */
+        } catch (e) {
+            const cideNodeError = createNode(canvas, created,
+                {
+                    text: `error at ${e}`,
                     size: { height: placeholderNoteHeight }
                 },
                 {
@@ -74,10 +90,6 @@ export const runCowsay = async function () {
                 }
             )
 
-        } catch (e) {
-            created.setText(`error :( ${e}`)
-            this.logDebug(`error :( : ${e}`)
-            return
         }
     }
 }

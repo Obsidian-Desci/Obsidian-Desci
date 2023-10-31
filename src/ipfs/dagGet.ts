@@ -1,15 +1,13 @@
+import { requestUrl } from 'obsidian'
+import { CanvasNode } from 'src/utils/canvas-internal'
 import {
     createNode,
     placeholderNoteHeight,
     assistantColor,
     getNodeText
 } from '../utils/canvas-util'
-import { CanvasNode } from 'utils/canvas-internal'
-import { ethers } from 'ethers'
-export const runSdxl = async function () {
+export const dagGet = async function () {
     if (this.unloaded) return
-
-    this.logDebug("Running sdxl")
 
     const canvas = this.getActiveCanvas()
     if (!canvas) {
@@ -26,17 +24,16 @@ export const runSdxl = async function () {
 
         const settings = this.settings
 
-        //const nodeData = node.getData()
+        const nodeData = node.getData()
         let nodeText = await getNodeText(node) || ''
         if (nodeText.length == 0) {
-            console.log('no node text')
             this.logDebug('no node Text found')
             return
         }
 
         const created = createNode(canvas, node,
             {
-                text: `Calling Lilpad sdxl with ${nodeText}`,
+                text: `attempting to fetch ${nodeText} from ipfs`,
                 size: { height: placeholderNoteHeight }
             },
             {
@@ -45,25 +42,18 @@ export const runSdxl = async function () {
             }
         )
         try {
-            console.log('waiting for sdxl run')
-            console.log('signer', this.signer)
-            const tx = await this.exampleClient.runSDXL(
-                nodeText, {
-                value: ethers.parseUnits('4', 'ether')
-            }
-            )
-            const receipt = await tx.wait()
-            console.log('receipt', receipt)
 
-            console.log('tx', tx)
-            created.setText(`success! tx hash: ${tx.hash}, listening for job completion`)
-            this.exampleClient.on("ReceivedJobResults", (jobId:string, cid:string) => {
-                //const res = await this.exampleClient.fetchAllResults()
-                //console.log('res', res)
-                //const ipfsio = res[res.length -1][2]
-                const ipfsFetchNode = createNode(canvas, created,
+            const res = await requestUrl({
+                url: `${this.settings.kuboRpc}/dag/get?arg=${nodeText}`, 
+                method: 'POST',
+                headers: {
+                    "Content-Type": "text/plain",
+                }
+            })
+            res.json.Links.forEach((link: any) => {
+                const name = createNode(canvas, created,
                     {
-                        text: `${cid}`,
+                        text: `${link.Name}`,
                         size: { height: placeholderNoteHeight }
                     },
                     {
@@ -71,13 +61,22 @@ export const runSdxl = async function () {
                         chat_role: 'assistant'
                     }
                 )
-
+                createNode(canvas, name,
+                    {
+                        text: `${link.Hash['/']}`,
+                        size: { height: placeholderNoteHeight }
+                    },
+                    {
+                        color: assistantColor,
+                        chat_role: 'assistant'
+                    }
+                )
             })
-            /*
-            */
+            created.setText('success~')
         } catch (e) {
-            created.setText(`error :( ${e}`)
-            this.logDebug(`error :( : ${e}`)
+            this.logDebug(e)
+            console.log('ipfs fetch error: ', e, `\n is your kubo node on at ${this.settings.kuboRpc}`)
+            created.setText(`error :( : ${e}`)
             return
         }
     }

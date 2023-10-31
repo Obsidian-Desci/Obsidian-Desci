@@ -1,4 +1,4 @@
-import type ObsidianDesci from './main'
+import type ObsidianDesci from '../main'
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 interface ChainConfig {
@@ -10,7 +10,6 @@ interface ChainConfig {
 export interface ObsidianDesciSettings {
 	privateKey: string;
 	chain: ChainConfig;
-	useEngine: boolean;
 	kuboRpc: string;
 }
 
@@ -21,7 +20,6 @@ export const DEFAULT_SETTINGS: ObsidianDesciSettings = {
 		rpcUrl: 'http://testnet.lilypadnetwork.org:8545',
 		chainId: 1337
 	},
-	useEngine: false,
 	kuboRpc: 'http:/127.0.0.1:5001/api/v0'
 }
 
@@ -39,7 +37,7 @@ export class ObsidianDesciSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		new Setting(containerEl)
-			.setName('Private Key')
+			.setName('Private key')
 			.setDesc('It\'s a secret')
 			.addText(text => text
 				.setPlaceholder('Enter your Ethereum Private Key')
@@ -49,7 +47,7 @@ export class ObsidianDesciSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		new Setting(containerEl)
-			.setName('Kubo Rpc Url')
+			.setName('Kubo rpc url')
 			.setDesc('If you turn on a Kubo node we can use IPFS in obsidian')
 			.addText(text => text
 				.setPlaceholder('Enter your Kubo RPC endpoint')
@@ -58,14 +56,5 @@ export class ObsidianDesciSettingTab extends PluginSettingTab {
 					this.plugin.settings.kuboRpc = value;
 					await this.plugin.saveSettings();
 				}));
-		new Setting(containerEl)
-			.setName('Use Engine')
-			.setDesc('If you have the Engine running on your computer you can gain enhanced functionality')
-			.addToggle((toggle) => {
-				toggle.setValue(this.plugin.settings.useEngine).onChange(async (value) => {
-					this.plugin.settings.useEngine = value
-					await this.plugin.saveSettings();
-				})
-			});
 	}
 }
