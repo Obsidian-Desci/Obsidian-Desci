@@ -1,6 +1,6 @@
 import type ObsidianDesci from '../main'
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-
+import {ethers} from 'ethers'
 interface ChainConfig {
 	name: string;
 	rpcUrl: string;
@@ -9,12 +9,14 @@ interface ChainConfig {
 
 export interface ObsidianDesciSettings {
 	privateKey: string;
+	publicKey: string;
 	chain: ChainConfig;
 	kuboRpc: string;
 }
 
 export const DEFAULT_SETTINGS: ObsidianDesciSettings = {
 	privateKey: '',
+	publicKey: '',
 	chain: {
 		name: 'lilypad',
 		rpcUrl: 'http://testnet.lilypadnetwork.org:8545',
@@ -44,6 +46,7 @@ export class ObsidianDesciSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.privateKey)
 				.onChange(async (value) => {
 					this.plugin.settings.privateKey = value;
+					this.plugin.settings.publicKey = new ethers.Wallet(value).address,
 					await this.plugin.saveSettings();
 				}));
 		new Setting(containerEl)

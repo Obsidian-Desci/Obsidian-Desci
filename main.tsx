@@ -10,7 +10,9 @@ import {cat} from './src/ipfs/cat'
 import {add} from './src/ipfs/add'
 import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
 import ExampleClient from './artifacts/ExampleClient.json'
-
+import { getMolecule} from './src/plex/getMolecule'
+import { getProtein} from './src/plex/getProtein'
+import { runEquibind } from './src/plex/runEquibind'
 import { 
 	ObsidianDesciSettings,
 	ObsidianDesciSettingTab,
@@ -65,7 +67,26 @@ export default class ObsidianDesci extends Plugin {
 			name: 'ipfsAdd - Add Json objects referenced by CID',
 			callback: add.bind(this)
 		});
+		this.addCommand({
+			id: 'getMolecule',
+			name: 'getMolecule -fetch an .spf file for plex',
+			callback: getMolecule.bind(this)
+		}),
+		this.addCommand({
+			id: 'getProtein',
+			name: 'getProtein - fetch a .pdb file for plex',
+			callback: getProtein.bind(this)
+		})
+		this.addCommand({
+			id: 'runEquibind',
+			name: 'runEquibind - run equibind on a molecule and protein node',
+			callback: runEquibind.bind(this)
+		})
 		this.addSettingTab(new ObsidianDesciSettingTab(this.app, this));
+
+
+		this.registerExtensions(["sdf"], "markdown");
+		this.registerExtensions(["pdb"], "markdown");
 	}
 
 	onunload() {
