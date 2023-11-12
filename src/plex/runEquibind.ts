@@ -1,11 +1,15 @@
 import { requestUrl, Vault } from 'obsidian'
 import { CanvasNode } from 'src/utils/canvas-internal'
 import * as fs from 'fs'
+import * as $3Dmol from '3dmol/build/3Dmol.js';
+
 import {
     createNode,
+    addEdge,
     placeholderNoteHeight,
     assistantColor,
-    getNodeText
+    getNodeText,
+    randomHexString
 } from '../utils/canvas-util'
 import { exec } from 'child_process'
 import { CID } from 'multiformats/cid'
@@ -23,7 +27,8 @@ export const runEquibind = async function () {
     const values: CanvasNode[] = Array.from(selection.values())
     const node: CanvasNode = values[0]
     const node2: CanvasNode = values[1]
-    if (node) {
+    console.log('values', values)
+    if (node && node2) {
         await canvas.requestSave()
         await sleep(200)
 
@@ -35,16 +40,17 @@ export const runEquibind = async function () {
         }
         let proteinPath: string | undefined;
         let moleculePath: string | undefined;
-
-        if (node.filePath?.endsWith('.pdb')) {
+        let pdb = /pdb/
+        let sdf = /sdf/
+        if (pdb.test(node.filePath)) {
             proteinPath = node.filePath;
-        } else if (node2.filePath?.endsWith('.pdb')) {
+        } else if (pdb.test(node2.filePath)) {
             proteinPath = node2.filePath;
         }
 
-        if (node.filePath?.endsWith('.sdf')) {
+        if (sdf.test(node.filePath)) {
             moleculePath = node.filePath;
-        } else if (node2.filePath?.endsWith('.sdf')) {
+        } else if (sdf.test(node2.filePath)) {
             moleculePath = node2.filePath;
         }
         console.log('moleculePath', moleculePath)
@@ -61,18 +67,31 @@ export const runEquibind = async function () {
                 chat_role: 'assistant'
             }
         )
+        addEdge(canvas, randomHexString(16), {
+                fromOrTo: "from",
+                side: "bottom",
+                node: node2,
+            }, {
+                fromOrTo: "to",
+                side: "top",
+                node: created,
+        })
 
         try {
             const command = `${this.app.vault.adapter.basePath}/${this.app.vault.configDir}/plugins/obsidian-desci/src/plex/equibind.py`
             const equibind = exec(`python3 ${command} ${this.app.vault.adapter.basePath} ${proteinPath} ${moleculePath} ${this.settings.publicKey}`)
             equibind.stdout?.on('data', (data) => {
                console.log('stdout:data:', data)
-               const regex = /Completed IO JSON CID: (\w+)/;
-                const match = data.match(regex);
-                const cid = match ? match[1] : "";
-                console.log(cid); // Output: QmbijdVrr
+               const outputDirRegex = /Created working directory: (.*)\n/;
+               const outputFileRegex = /[^\/]+(?=\/$|$)/
+               const outputDir = data.match(outputDirRegex)[1]
+               const outputFile = outputDir.match(outputFileRegex)[0]
+               console.log('outputfile', outputFile)
+           
+               const cidRegex = /Completed IO JSON CID: (.*)\n/;
+               const cid = data.match(cidRegex)[1]
 
-                const cideNodeError = createNode(canvas, created,
+                const cideNode = createNode(canvas, created,
                     {
                         text: `${cid}`,
                         size: { height: placeholderNoteHeight }
@@ -81,6 +100,18 @@ export const runEquibind = async function () {
                         color: assistantColor,
                         chat_role: 'assistant'
                     }
+                )
+                const outputFileNode = createNode(canvas, created,
+                    {
+                        text: `Output folder at: ${outputFile}`,
+                        size: { height: placeholderNoteHeight }
+                    },
+                    {
+                        color: assistantColor,
+                        chat_role: 'assistant'
+
+                    },
+                    { x:-400, y:0}
                 )
 
             })

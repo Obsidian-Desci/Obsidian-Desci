@@ -15,3 +15,10 @@ div[data-path*="sdf"]{
 color: #9999996e;
 display: flex;
 }
+
+.molecule-viewer {
+    display: flex;
+    width: 100vh;
+    height: 100vh;
+
+}

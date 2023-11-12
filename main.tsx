@@ -13,6 +13,7 @@ import ExampleClient from './artifacts/ExampleClient.json'
 import { getMolecule} from './src/plex/getMolecule'
 import { getProtein} from './src/plex/getProtein'
 import { runEquibind } from './src/plex/runEquibind'
+import { viewMolecule } from 'src/plex/viewMolecule';
 import { 
 	ObsidianDesciSettings,
 	ObsidianDesciSettingTab,
@@ -81,6 +82,11 @@ export default class ObsidianDesci extends Plugin {
 			id: 'runEquibind',
 			name: 'runEquibind - run equibind on a molecule and protein node',
 			callback: runEquibind.bind(this)
+		})
+		this.addCommand({
+			id: 'viewMolecule',
+			name: 'viewMolecule - view a molecule',
+			callback: viewMolecule.bind(this)
 		})
 		this.addSettingTab(new ObsidianDesciSettingTab(this.app, this));
 

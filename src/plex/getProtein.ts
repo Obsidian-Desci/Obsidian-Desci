@@ -1,5 +1,6 @@
-import { requestUrl, Vault } from 'obsidian'
-import { CanvasNode } from 'src/utils/canvas-internal'
+import { requestUrl, Vault } from 'obsidian';
+import { CanvasNode } from 'src/utils/canvas-internal';
+
 import * as fs from 'fs'
 import {
     createNode,
@@ -47,6 +48,18 @@ export const getProtein = async function () {
                 chat_role: 'assistant'
             }
         )
+        const displayNode = createNode(canvas, created,
+            {
+                text: "test",
+                size: { height: placeholderNoteHeight*3 }
+            },
+            {
+                color: assistantColor,
+                chat_role: 'assistant'
+            }
+        )
+        displayNode.setText("")
+
 
         try {
             const res = await requestUrl({
@@ -57,27 +70,45 @@ export const getProtein = async function () {
                 }
             })
             console.log('res', res.arrayBuffer)
-                const regex = /\/([^/]+)$/;
-                const matches = nodeText.match(regex);
-                const filename = matches ? matches[1] : "";
-                const buffer = Buffer.from(res.arrayBuffer);
-                fs.writeFile(`${this.app.vault.adapter.basePath}/${filename}`, buffer, 'base64', (error) => {
-                    if (error) {
-                        console.error('Error saving image:', error);
-                    } else {
-                        const file = this.app.vault.getAbstractFileByPath(`${filename}`)
-                        const cidNode = createNode(canvas, created,
-                            {
-                                file,
-                                size: { height: placeholderNoteHeight }
-                            },
-                            {
-                                color: assistantColor,
-                                chat_role: 'assistant'
-                            }
-                        )
-                    }
-                });
+            const regex = /\/([^/]+)$/;
+            const matches = nodeText.match(regex);
+            const filename = matches ? matches[1] : "";
+            const buffer = Buffer.from(res.arrayBuffer);
+            fs.writeFile(`${this.app.vault.adapter.basePath}/${filename}`, buffer, 'base64', (error) => {
+                if (error) {
+                    console.error('Error saving image:', error);
+                } else {
+                    const file = this.app.vault.getAbstractFileByPath(`${filename}`)
+                    import("3dmol/build/3Dmol.js").then(async ($3Dmol) => {
+
+                        console.log('displayNode', displayNode)
+                        const el = displayNode.containerEl
+                        console.log($3Dmol);
+                        console.log('el', el)
+                        console.log('canvas', canvas)
+                        await sleep(200)
+                        let config = { backgroundColor: 'rgb(30,30,30)' };
+                        let viewer = $3Dmol.createViewer(el, config);
+                        let m = viewer.addModel()
+                        m.addMolData(fs.readFileSync(`${this.app.vault.adapter.basePath}/${filename}`, 'utf-8'), 'pdb')
+
+                        viewer.zoomTo();
+                        viewer.render();
+                        console.log('viewer', viewer)
+                        viewer.zoom(0.8, 2000);
+                    });
+                    const cidNode = createNode(canvas, created,
+                        {
+                            file,
+                            size: { height: placeholderNoteHeight }
+                        },
+                        {
+                            color: assistantColor,
+                            chat_role: 'assistant'
+                        }
+                    )
+                }
+            });
 
 
         } catch (e) {
