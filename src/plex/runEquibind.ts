@@ -83,9 +83,20 @@ export const runEquibind = async function () {
             equibind.stdout?.on('data', (data) => {
                console.log('stdout:data:', data)
                const outputDirRegex = /Created working directory: (.*)\n/;
-               const outputFileRegex = /[^\/]+(?=\/$|$)/
                const outputDir = data.match(outputDirRegex)[1]
+               const outputFileRegex = /[^\/]+(?=\/$|$)/
                const outputFile = outputDir.match(outputFileRegex)[0]
+               const nftLinkRegex = / ProofOfScience NFT at (.*)\n/;
+               const nftLink = data.match(nftLinkRegex)[0]
+
+               const dockedProteinRegex = /Docked Protein:  \/(.*)\n/;
+               let dockedProteinPath = data.match(dockedProteinRegex)[1]
+               console.log('dockedProteinPath', dockedProteinPath)
+               dockedProteinPath = dockedProteinPath.replace(/DockedProtein: /, '')
+               const dockedProteinFile = this.app.vault.getAbstractFileByPath(dockedProteinPath)
+               console.log('dockedProteinPath', dockedProteinPath)
+               console.log('dockerProteinFile', dockedProteinFile)
+               console.log('nftLink', nftLink)
                console.log('outputfile', outputFile)
            
                const cidRegex = /Completed IO JSON CID: (.*)\n/;
@@ -111,7 +122,32 @@ export const runEquibind = async function () {
                         chat_role: 'assistant'
 
                     },
-                    { x:-400, y:0}
+                    { x:-650, y:0}
+                )
+                const dockedProteinNode = createNode(canvas, outputFileNode,
+                    {
+                        file: dockedProteinFile,
+                        size: { height: placeholderNoteHeight }
+                    },
+                    {
+                        color: assistantColor,
+                        chat_role: 'assistant'
+
+                    },
+                )
+
+                const nftNode = createNode(canvas, created,
+                    {
+                        text: `NFT: ${nftLink}`,
+                        size: {
+                            height: placeholderNoteHeight
+                        }
+                    },
+                    {
+                        color: assistantColor,
+                        chat_role: 'assistant'
+                    },
+                    { x:650, y:0}
                 )
 
             })
