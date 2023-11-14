@@ -14,8 +14,8 @@
   "devDependencies": {
     "@types/node": "^16.18.61",
     "@types/pngjs": "^6.0.3",
-    "@types/react": "^18.2.21",
-    "@types/react-dom": "^18.2.7",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
     "@typescript-eslint/eslint-plugin": "5.29.0",
     "@typescript-eslint/parser": "5.29.0",
     "builtin-modules": "3.3.0",
@@ -24,7 +24,7 @@
     "hardhat": "^2.17.2",
     "obsidian": "latest",
     "tslib": "2.4.0",
-    "typescript": "4.7.4"
+    "typescript": "5.2.2"
   },
   "dependencies": {
     "@chainsafe/libp2p-noise": "^13.0.1",
@@ -35,6 +35,7 @@
     "@ipld/dag-json": "^10.1.4",
     "@libp2p/delegated-content-routing": "^4.0.9",
     "@libp2p/delegated-peer-routing": "^4.0.12",
+    "@rainbow-me/rainbowkit": "^1.2.0",
     "3dmol": "^2.0.6",
     "blockstore-core": "^4.3.4",
     "datastore-core": "^9.2.3",
@@ -47,6 +48,8 @@
     "multiformats": "^12.1.1",
     "node-fetch": "^3.3.2",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "viem": "^1.19.1",
+    "wagmi": "^1.4.6"
   }
 }

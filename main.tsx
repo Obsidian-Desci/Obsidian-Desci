@@ -20,6 +20,7 @@ import {
 	DEFAULT_SETTINGS
  } from './src/settings';
 
+import { WalletModal } from './src/views/WalletView';
 
 export default class ObsidianDesci extends Plugin {
 	settings: ObsidianDesciSettings;
@@ -31,6 +32,9 @@ export default class ObsidianDesci extends Plugin {
 	logDebug: (...args: unknown[]) => void = () => { }
 	async onload() {
 		await this.loadSettings();
+		const walletTab = this.addRibbonIcon("wallet", "Open Wallet", () => {
+			new WalletModal(this.app).open();
+		})
 		this.provider = new JsonRpcProvider(this.settings.chain.rpcUrl)
 		if (this.settings.privateKey) {
 			this.wallet = new Wallet(this.settings.privateKey, this.provider)
