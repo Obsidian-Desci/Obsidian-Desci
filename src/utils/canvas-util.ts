@@ -109,6 +109,7 @@ export const createNode = (
 	canvas: Canvas,
 	parentNode: CanvasNode,
 	nodeOptions: CreateNodeOptions,
+	nodeType: 'file' | 'text' | 'link' | 'group' | 'react',
 	nodeData?: Partial<AllCanvasNodeData>,
 	offset?: {x: number, y: number}
 ) => {
@@ -117,8 +118,6 @@ export const createNode = (
 	if (!canvas) {
 		throw new Error('Invalid arguments')
 	}
-	const text = nodeOptions.text ? nodeOptions.text : ''
-	const nodeType =  text.length > 0 ? 'text': 'file'
 
 	const width = nodeOptions?.size?.width || Math.max(minWidth, parentNode?.width)
 	const height = nodeOptions?.size?.height
@@ -141,32 +140,55 @@ export const createNode = (
 		+ height * 0.5 - offset.y
 
 	let newNode: CanvasNode;
-	if (nodeType === 'text') {
-		newNode = canvas.createTextNode(
-			{
-				pos: { x, y },
-				position: 'left',
-				size: { height, width },
-				text,
-				focus: false
-			}
-		)
-	} else {
-		newNode = canvas.createFileNode(
-			{
-				pos: { x, y },
-				position: 'left',
-				size: { height, width },
-				file: nodeOptions.file,
-				//nodeOptions.subpath,
-				focus: false
-			}
-		)
 
-	}
+	switch (nodeType) {
+		case 'link':
+			break;
+		case 'group':
+			break;
+		case 'file':
+			newNode = canvas.createFileNode(
+				{
+					pos: { x, y },
+					position: 'left',
+					size: { height, width },
+					file: nodeOptions.file,
+					//nodeOptions.subpath,
+					focus: false
+				}
+			)
+			newNode.setData(nodeData)
+			break;
+		case 'text':
+			const text = nodeOptions.text
+			newNode = canvas.createTextNode(
+				{
+					pos: { x, y },
+					position: 'left',
+					size: { height, width },
+					text,
+					focus: false
+				}
+			)
+			newNode.setData(nodeData)
+			break;
 
-	if (nodeData) {
-		newNode.setData(nodeData)
+		case 'react':
+			newNode = canvas.createTextNode(
+				{
+					pos: { x, y },
+					position: 'left',
+					size: { height, width },
+					focus: false
+				}
+			)
+			const root = createRoot(newNode.containerEl)
+			root.render(nodeOptions.component)
+			
+			newNode.setData(nodeData)
+			break;
+		default:
+			break
 	}
 
 	canvas.deselectAll()

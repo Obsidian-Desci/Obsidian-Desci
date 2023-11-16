@@ -38,6 +38,7 @@ export const runSdxl = async function () {
                 text: `Calling Lilpad sdxl with ${nodeText}`,
                 size: { height: placeholderNoteHeight }
             },
+            'text',
             {
                 color: assistantColor,
                 chat_role: 'assistant'
@@ -58,6 +59,7 @@ export const runSdxl = async function () {
                         text: `${cid}`,
                         size: { height: placeholderNoteHeight }
                     },
+                    'text',
                     {
                         color: assistantColor,
                         chat_role: 'assistant'

@@ -36,6 +36,7 @@ export const dagGet = async function () {
                 text: `attempting to fetch ${nodeText} from ipfs`,
                 size: { height: placeholderNoteHeight }
             },
+            'text',
             {
                 color: assistantColor,
                 chat_role: 'assistant'
@@ -56,6 +57,7 @@ export const dagGet = async function () {
                         text: `${link.Name}`,
                         size: { height: placeholderNoteHeight }
                     },
+                    'text',
                     {
                         color: assistantColor,
                         chat_role: 'assistant'
@@ -66,6 +68,7 @@ export const dagGet = async function () {
                         text: `${link.Hash['/']}`,
                         size: { height: placeholderNoteHeight }
                     },
+                    'text',
                     {
                         color: assistantColor,
                         chat_role: 'assistant'

@@ -47,6 +47,7 @@ export const add = async function () {
                 text: `attempting to convert tree to dag`,
                 size: { height: placeholderNoteHeight }
             },
+            'text',
             {
                 color: assistantColor,
                 chat_role: 'assistant'
@@ -84,6 +85,7 @@ export const add = async function () {
                     text: `error at ${e}`,
                     size: { height: placeholderNoteHeight }
                 },
+                'text',
                 {
                     color: assistantColor,
                     chat_role: 'assistant'

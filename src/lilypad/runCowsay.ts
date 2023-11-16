@@ -40,6 +40,7 @@ export const runCowsay = async function () {
                 text: `Calling Lilpad Cowsay with ${nodeText}`,
                 size: { height: placeholderNoteHeight }
             },
+            'text',
             {
                 color: assistantColor,
                 chat_role: 'assistant'
@@ -63,6 +64,7 @@ export const runCowsay = async function () {
                     text: `${cid}`,
                     size: { height: placeholderNoteHeight }
                 },
+                'text',
                 {
                     color: assistantColor,
                     chat_role: 'assistant'

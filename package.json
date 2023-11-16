@@ -32,6 +32,7 @@
     "@helia/dag-cbor": "^1.0.2",
     "@helia/dag-json": "^1.0.2",
     "@helia/unixfs": "^1.4.1",
+    "@hypercerts-org/sdk": "^1.0.0-alpha.9",
     "@ipld/dag-json": "^10.1.4",
     "@libp2p/delegated-content-routing": "^4.0.9",
     "@libp2p/delegated-peer-routing": "^4.0.12",
@@ -49,6 +50,7 @@
     "node-fetch": "^3.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-hook-form": "^7.48.2",
     "viem": "^1.19.1",
     "wagmi": "^1.4.6"
   }

@@ -46,6 +46,7 @@ export const viewMolecule = async function () {
                     height: 1000
                 }
             },
+            'text',
             {
                 color: assistantColor,
                 chat_role: 'assistant'
@@ -108,6 +109,7 @@ export const viewMolecule = async function () {
                     text: `error: ${e}`,
                     size: { height: placeholderNoteHeight }
                 },
+                'text',
                 {
                     color: assistantColor,
                     chat_role: 'assistant'

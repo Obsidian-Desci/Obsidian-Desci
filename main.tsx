@@ -1,28 +1,33 @@
 import { createRoot } from 'react-dom/client';
-import { WalletStatusBarItem} from './src/components/WalletStatusBarItem'
 import { Notice, Plugin, ItemView } from 'obsidian';
 import {
 	type CanvasView,
 } from './src/utils/canvas-util'
-import { getDpid } from './src/desci-nodes/getDpid'
-import { runSdxl } from './src/lilypad/runSdxl'
-import { runCowsay } from 'src/lilypad/runCowsay';
-import { dagGet } from './src/ipfs/dagGet'
-import { cat } from './src/ipfs/cat'
-import { add } from './src/ipfs/add'
-import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
-import ExampleClient from './artifacts/ExampleClient.json'
-import { getMolecule } from './src/plex/getMolecule'
-import { getProtein } from './src/plex/getProtein'
-import { runEquibind } from './src/plex/runEquibind'
-import { viewMolecule } from 'src/plex/viewMolecule';
 import {
 	ObsidianDesciSettings,
 	ObsidianDesciSettingTab,
 	DEFAULT_SETTINGS
 } from './src/settings';
 
-import { WalletModal } from './src/views/WalletView';
+import { getDpid } from './src/desci-nodes/getDpid'
+import { runSdxl } from './src/lilypad/runSdxl'
+import { runCowsay } from 'src/lilypad/runCowsay';
+
+import { dagGet } from './src/ipfs/dagGet'
+import { cat } from './src/ipfs/cat'
+import { add } from './src/ipfs/add'
+
+import { getMolecule } from './src/plex/getMolecule'
+import { getProtein } from './src/plex/getProtein'
+import { runEquibind } from './src/plex/runEquibind'
+import { viewMolecule } from 'src/plex/viewMolecule';
+
+import { createHypercertNode } from 'src/Hypercerts/createHypercert';
+
+import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
+import ExampleClient from './artifacts/ExampleClient.json'
+import { WalletModal } from './src/Wallet/WalletView';
+import { WalletStatusBarItem} from './src/Wallet/WalletStatusBarItem'
 import {
 	localhost,
 	mainnet,
@@ -118,11 +123,11 @@ export default class ObsidianDesci extends Plugin {
 			name: 'getMolecule -fetch an .spf file for plex',
 			callback: getMolecule.bind(this)
 		}),
-			this.addCommand({
-				id: 'getProtein',
-				name: 'getProtein - fetch a .pdb file for plex',
-				callback: getProtein.bind(this)
-			})
+		this.addCommand({
+			id: 'getProtein',
+			name: 'getProtein - fetch a .pdb file for plex',
+			callback: getProtein.bind(this)
+		})
 		this.addCommand({
 			id: 'runEquibind',
 			name: 'runEquibind - run equibind on a molecule and protein node',
@@ -132,6 +137,11 @@ export default class ObsidianDesci extends Plugin {
 			id: 'viewMolecule',
 			name: 'viewMolecule - view a molecule',
 			callback: viewMolecule.bind(this)
+		})
+		this.addCommand({
+			id: 'createHypercert',
+			name: 'createHypercert - create a hypercert',
+			callback: createHypercertNode.bind(this)
 		})
 		this.addSettingTab(new ObsidianDesciSettingTab(this.app, this));
 

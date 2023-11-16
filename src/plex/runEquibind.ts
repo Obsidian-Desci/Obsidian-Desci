@@ -62,6 +62,7 @@ export const runEquibind = async function () {
                 text: `attempting equibind on ${moleculePath} and ${proteinPath}`,
                 size: { height: placeholderNoteHeight }
             },
+            'text',
             {
                 color: assistantColor,
                 chat_role: 'assistant'
@@ -107,6 +108,7 @@ export const runEquibind = async function () {
                         text: `${cid}`,
                         size: { height: placeholderNoteHeight }
                     },
+                    'text',
                     {
                         color: assistantColor,
                         chat_role: 'assistant'
@@ -117,6 +119,7 @@ export const runEquibind = async function () {
                         text: `Output folder at: ${outputFile}`,
                         size: { height: placeholderNoteHeight }
                     },
+                    'text',
                     {
                         color: assistantColor,
                         chat_role: 'assistant'
@@ -129,6 +132,7 @@ export const runEquibind = async function () {
                         file: dockedProteinFile,
                         size: { height: placeholderNoteHeight }
                     },
+                    'file',
                     {
                         color: assistantColor,
                         chat_role: 'assistant'
@@ -143,6 +147,7 @@ export const runEquibind = async function () {
                             height: placeholderNoteHeight
                         }
                     },
+                    'text',
                     {
                         color: assistantColor,
                         chat_role: 'assistant'

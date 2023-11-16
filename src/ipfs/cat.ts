@@ -42,10 +42,11 @@ export const cat = async function () {
                 text: `attempting to fetch ${nodeText} from ipfs`,
                 size: { height: placeholderNoteHeight }
             },
+            'text',
             {
                 color: assistantColor,
                 chat_role: 'assistant'
-            }
+            },
         )
 
         try {
@@ -69,6 +70,7 @@ export const cat = async function () {
                                 file,
                                 size: { height: placeholderNoteHeight }
                             },
+                            'file',
                             {
                                 color: assistantColor,
                                 chat_role: 'assistant'
@@ -82,6 +84,7 @@ export const cat = async function () {
                         text: `${res.text}`,
                         size: { height: placeholderNoteHeight }
                     },
+                    'text',
                     {
                         color: assistantColor,
                         chat_role: 'assistant'
@@ -96,6 +99,7 @@ export const cat = async function () {
                     text: `error at ${e}\n is your kubo node on at ${this.settings.kuboRpc}?`,
                     size: { height: placeholderNoteHeight }
                 },
+                'text',
                 {
                     color: assistantColor,
                     chat_role: 'assistant'

@@ -12,6 +12,7 @@ export interface ObsidianDesciSettings {
 	publicKey: string;
 	chain: ChainConfig;
 	kuboRpc: string;
+	nftStorageApiKey: string;
 }
 
 export const DEFAULT_SETTINGS: ObsidianDesciSettings = {
@@ -22,7 +23,8 @@ export const DEFAULT_SETTINGS: ObsidianDesciSettings = {
 		rpcUrl: 'http://testnet.lilypadnetwork.org:8545',
 		chainId: 1337
 	},
-	kuboRpc: 'http:/127.0.0.1:5001/api/v0'
+	kuboRpc: 'http:/127.0.0.1:5001/api/v0',
+	nftStorageApiKey: ''
 }
 
 export class ObsidianDesciSettingTab extends PluginSettingTab {
@@ -49,6 +51,7 @@ export class ObsidianDesciSettingTab extends PluginSettingTab {
 					this.plugin.settings.publicKey = new ethers.Wallet(value).address,
 					await this.plugin.saveSettings();
 				}));
+
 		new Setting(containerEl)
 			.setName('Kubo rpc url')
 			.setDesc('If you turn on a Kubo node we can use IPFS in obsidian')
@@ -57,6 +60,17 @@ export class ObsidianDesciSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.kuboRpc)
 				.onChange(async (value) => {
 					this.plugin.settings.kuboRpc = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('NFT.storage api key')
+			.setDesc('It\'s a secret')
+			.addText(text => text
+				.setPlaceholder('Enter your NFT.Storage api key')
+				.setValue(this.plugin.settings.nftStorageApiKey)
+				.onChange(async (value) => {
+					this.plugin.settings.nftStorageApiKey = value;
 					await this.plugin.saveSettings();
 				}));
 	}

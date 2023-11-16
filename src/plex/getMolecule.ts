@@ -42,6 +42,7 @@ export const getMolecule = async function () {
                 text: `attempting to fetch ${nodeText}`,
                 size: { height: placeholderNoteHeight }
             },
+            'text',
             {
                 color: assistantColor,
                 chat_role: 'assistant'
@@ -71,6 +72,7 @@ export const getMolecule = async function () {
                                 file,
                                 size: { height: placeholderNoteHeight }
                             },
+                            'file',
                             {
                                 color: assistantColor,
                                 chat_role: 'assistant'
@@ -86,6 +88,7 @@ export const getMolecule = async function () {
                     text: `error: ${e}`,
                     size: { height: placeholderNoteHeight }
                 },
+                'text',
                 {
                     color: assistantColor,
                     chat_role: 'assistant'

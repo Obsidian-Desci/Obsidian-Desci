@@ -71,6 +71,8 @@ export interface Canvas {
 export interface CreateNodeOptions {
 	text?: string,
 	file?: TFile | undefined,
+	link?: string,
+	component?: React.ReactNode,
 	subpath?: string,
 	pos?: { x: number, y: number }
 	position?: 'left' | 'right' | 'top' | 'bottom',
