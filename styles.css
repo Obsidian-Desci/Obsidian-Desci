@@ -6,3 +6,20 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+
+div[data-path^="sdf"]{
+color: #9999996e;
+display: flex;
+}
+div[data-path*="sdf"]{
+color: #9999996e;
+display: flex;
+}
+
+.molecule-viewer {
+    display: flex;
+    width: 100vh;
+    height: 100vh;
+
+}

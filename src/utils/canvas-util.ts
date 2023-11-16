@@ -98,7 +98,7 @@ export const emptyNoteHeight = 100
  */
 export const placeholderNoteHeight = 60
 
-const randomHexString = (len: number) => {
+export const randomHexString = (len: number) => {
 	const t = []
 	for (let n = 0; n < len; n++) {
 		t.push((16 * Math.random() | 0).toString(16))
