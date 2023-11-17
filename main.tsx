@@ -22,7 +22,7 @@ import { getProtein } from './src/plex/getProtein'
 import { runEquibind } from './src/plex/runEquibind'
 import { viewMolecule } from 'src/plex/viewMolecule';
 
-import { createHypercertNode } from 'src/Hypercerts/createHypercert';
+import { HypercertModal } from 'src/Hypercerts/HypercertsCanvasNodeView';
 
 import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
 import ExampleClient from './artifacts/ExampleClient.json'
@@ -46,6 +46,7 @@ export default class ObsidianDesci extends Plugin {
 	wallet: Wallet
 	signer: Signer
 	exampleClient: ethers.Contract
+	wagmiConfig: object
 	logDebug: (...args: unknown[]) => void = () => { }
 	async onload() {
 		await this.loadSettings();
@@ -64,6 +65,7 @@ export default class ObsidianDesci extends Plugin {
 			projectId,
 			metadata,
 		})
+		this.wagmiConfig = wagmiConfig
 		createWeb3Modal({ wagmiConfig, projectId, chains: chainsModal })
 		const walletTab = this.addRibbonIcon("wallet", "Open Wallet", () => {
 			new WalletModal(this.app, wagmiConfig).open();
@@ -74,11 +76,9 @@ export default class ObsidianDesci extends Plugin {
 		const root = createRoot(rootElement)
 		root.render(
 			<WagmiConfig config={wagmiConfig}>
-		<WalletStatusBarItem/>
+				<WalletStatusBarItem/>
 			</WagmiConfig>
 		)
-
-
 
 
 		this.provider = new JsonRpcProvider(this.settings.chain.rpcUrl)
@@ -141,7 +141,9 @@ export default class ObsidianDesci extends Plugin {
 		this.addCommand({
 			id: 'createHypercert',
 			name: 'createHypercert - create a hypercert',
-			callback: createHypercertNode.bind(this)
+			callback: () => {
+				new HypercertModal(this.app, wagmiConfig).open();
+			}
 		})
 		this.addSettingTab(new ObsidianDesciSettingTab(this.app, this));
 

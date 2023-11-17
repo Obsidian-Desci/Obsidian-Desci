@@ -1,7 +1,7 @@
 import { useEffect,useState, useCallback } from 'react'
 import { getContract, parseEther, zeroAddress } from 'viem'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
-import { HypercertClient, formatHypercertData, TransferRestrictions, } from "@hypercerts-org/sdk";
+import { HypercertClient, formatHypercertData, TransferRestrictions } from "@hypercerts-org/sdk";
 
 export const useCreateHypercert = (nftStorageApiKey: string) => {
     const { address } = useAccount()
@@ -10,17 +10,30 @@ export const useCreateHypercert = (nftStorageApiKey: string) => {
     const [result, setResult] = useState(null)
     const [hash, setHash] = useState(null)
 
+type HypercertData  = {
+    name: string;
+    description: string;
+    external_url?: string | undefined;
+    image: string;
+    version: string;
+    properties?: {
+        trait_type: string;
+        value: string;
+    }[] | undefined;
+    impactScope: string[];
+    excludedImpactScope: string[];
+    workScope: string[];
+    excludedWorkScope: string[];
+    workTimeframeStart: number;
+    workTimeframeEnd: number;
+    impactTimeframeStart: number;
+    impactTimeframeEnd: number;
+    contributors: string[];
+    rights: string[];
+    excludedRights: string[];
+}
 
-
-    const createHypercert = useCallback(async ({
-        data, account, units, uri, restrictions
-    }: {
-        name: string
-        account: `0x${string}`
-        units: string
-        uri: string
-        restrictions: string
-    }) => {
+    const createHypercert = useCallback(async (data: HypercertData) => {
         const { data: metadata, valid, errors } = formatHypercertData({
             name: data.name,
             description: data.description,
@@ -58,6 +71,7 @@ export const useCreateHypercert = (nftStorageApiKey: string) => {
                  totalUnits,
                  transferRestrictions
               )
+            
             setHash(tx)
             
         }
