@@ -28,6 +28,8 @@ import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
 import ExampleClient from './artifacts/ExampleClient.json'
 import { WalletModal } from './src/Wallet/WalletView';
 import { WalletStatusBarItem} from './src/Wallet/WalletStatusBarItem'
+
+import { createFlowNode } from './src/utils/canvas-util';
 import {
 	localhost,
 	mainnet,
@@ -144,6 +146,11 @@ export default class ObsidianDesci extends Plugin {
 			callback: () => {
 				new HypercertModal(this.app, wagmiConfig).open();
 			}
+		})
+		this.addCommand({
+			id: 'testFlowNode',
+			name: 'testFlowNode - test flow node',
+			callback: createFlowNode.bind(this)
 		})
 		this.addSettingTab(new ObsidianDesciSettingTab(this.app, this));
 

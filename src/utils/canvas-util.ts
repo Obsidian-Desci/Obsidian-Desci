@@ -223,3 +223,109 @@ export async function getNodeText(node: CanvasNode) {
 			return readFile(nodeData.file)
 	}
 }
+
+export const createFlowNode = function (
+) {
+	const testFn = (a:number, b:number) => {
+		return a*b
+	}
+
+
+
+	console.log(testFn)
+    const canvas = this.getActiveCanvas()
+	console.log('canvas', canvas)
+
+	const pointer = canvas.pointer
+	console.log('pointer', pointer)
+	const flowNodeSize = { height: 262, width: 262 + 161 }
+	const bounds = {
+		xLeft: pointer.x,
+		xRight: pointer.x + flowNodeSize.width,
+		yTop: pointer.y - flowNodeSize.height * 0.5 + 50,
+		yBottom: pointer.y + flowNodeSize.height * 0.5
+	}
+	const groupNode = canvas.createGroupNode(
+		{
+			pos: pointer,
+			position: 'left',
+			size: { height: 262, width: 262 + 161 },
+			focus: false
+		}
+	)
+	groupNode.label = 'Flow Node'
+	console.log('groupNode', groupNode)
+	const inputNode = canvas.createTextNode(
+		{
+			pos: { x: bounds.xLeft, y: bounds.yTop },
+			position: 'left',
+			size: { height: 50, width: 100 },
+			text: 'Input Node',
+			focus: false,
+		}
+	)
+	const inputNode2 = canvas.createTextNode(
+		{
+			pos: { x: bounds.xLeft, y: bounds.yTop + 75 },
+			position: 'left',
+			size: { height: 50, width: 100 },
+			text: 'Input Node',
+			focus: false,
+		}
+	)
+	const outputNode = canvas.createTextNode(
+		{
+			pos: { x: bounds.xRight, y: bounds.yTop },
+			position: 'right',
+			size: { height: 50, width: 100 },
+			text: 'Output Node',
+			focus: false
+		}
+	)
+	const inputRef = document.querySelector('.canvas-edges')
+	console.log('inputRef', inputRef)
+	const config = { attributes: true, childList: true, subtree: true };
+	let inputA;
+	let inputB;
+	let output;
+	const callback = (mutationList, observer) => {
+		console.log('mutation confirmed')
+		console.log('mutationList', mutationList)
+		console.log('observer', observer)
+		console.log(inputNode)
+		const edgeInput1 =  canvas.getEdgesForNode(inputNode)
+		console.log('edgeInput1', edgeInput1)
+		if (edgeInput1.length === 1) {
+			inputA = edgeInput1[0].from.node.text
+		}
+		const edgeInput2 =  canvas.getEdgesForNode(inputNode2)
+		console.log('edgeInput2', edgeInput2)
+		if (edgeInput2.length === 1) {
+			inputB = edgeInput2[0].from.node.text
+		}
+		if (inputA && inputB) {
+			output = testFn(parseInt(inputA), parseInt(inputB))
+			const outputEdge = canvas.getEdgesForNode(outputNode)
+			if (outputEdge.length > 0 ) {
+				for (const edge of outputEdge) {
+					console.log('output node', edge.to.node)
+					edge.to.node.setData({
+						text: `${output}` // output
+					})
+				console.log('output node', edge.to.node)
+				}
+			}
+		}
+
+		for (const mutation of mutationList) {
+			if (mutation.type === 'childList') {
+				console.log('mutation', mutation)
+			} else if (mutation.type === 'attributes') {
+				console.log('mutation attribute  name', mutation.attributeName)
+			}
+		}
+	}
+	const observer = new MutationObserver(callback)
+	observer.observe(inputRef, config)
+	canvas.addNode(groupNode)
+}

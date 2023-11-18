@@ -55,9 +55,11 @@ export interface Canvas {
 	selection: Set<CanvasNode>
 	nodes: CanvasNode[]
 	wrapperEl: HTMLElement | null
+	pointer: { x: number, y: number }
 	addNode(node: CanvasNode): void
 	createTextNode(options: CreateNodeOptions): CanvasNode
 	createFileNode(options: CreateNodeOptions): CanvasNode
+	createGroupNode(options: CreateNodeOptions): CanvasNode
 	deselectAll(): void
 	getData(): CanvasData
 	getEdgesForNode(node: CanvasNode): CanvasEdge[]

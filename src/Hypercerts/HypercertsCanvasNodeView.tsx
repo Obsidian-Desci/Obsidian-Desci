@@ -120,8 +120,6 @@ export const HyperCertsCanvasNodeView = ({nftStorageApiKey}:{nftStorageApiKey: s
       <p style={{color: 'red', fontSize: '10px'}}>{errors?.hypercertToC && <p>{errors.hypercertToC.message}</p>}</p>
 
 
-
-
       <input type="submit" />
     </form>
   </div>)
