@@ -224,70 +224,86 @@ export async function getNodeText(node: CanvasNode) {
 	}
 }
 
-export const createFlowNode = function (
-) {
-	const testFn = (a:number, b:number) => {
-		return a*b
-	}
 
 
 
-	console.log(testFn)
+
+interface FlowNodeData {
+	name: string,
+	inputs: string[],
+	parameters: string[],
+	outputs: string[],
+	fn: Function,
+	size: { height: number, width: number },
+}
+
+export const createFlowNode = function ({
+	name, inputs, parameters, outputs, fn, size
+}: FlowNodeData) {
     const canvas = this.getActiveCanvas()
 	console.log('canvas', canvas)
 
 	const pointer = canvas.pointer
 	console.log('pointer', pointer)
-	const flowNodeSize = { height: 262, width: 262 + 161 }
 	const bounds = {
 		xLeft: pointer.x,
-		xRight: pointer.x + flowNodeSize.width,
-		yTop: pointer.y - flowNodeSize.height * 0.5 + 50,
-		yBottom: pointer.y + flowNodeSize.height * 0.5
+		xRight: pointer.x + size.width,
+		yTop: pointer.y - size.height * 0.5 + 50,
+		yBottom: pointer.y + size.height * 0.5
 	}
 	const groupNode = canvas.createGroupNode(
 		{
 			pos: pointer,
 			position: 'left',
-			size: { height: 262, width: 262 + 161 },
+			size,
 			focus: false
 		}
 	)
-	groupNode.label = 'Flow Node'
+	groupNode.label = name
 	console.log('groupNode', groupNode)
-	const inputNode = canvas.createTextNode(
-		{
-			pos: { x: bounds.xLeft, y: bounds.yTop },
-			position: 'left',
-			size: { height: 50, width: 100 },
-			text: 'Input Node',
-			focus: false,
-		}
-	)
-	const inputNode2 = canvas.createTextNode(
-		{
-			pos: { x: bounds.xLeft, y: bounds.yTop + 75 },
-			position: 'left',
-			size: { height: 50, width: 100 },
-			text: 'Input Node',
-			focus: false,
-		}
-	)
-	const outputNode = canvas.createTextNode(
-		{
-			pos: { x: bounds.xRight, y: bounds.yTop },
-			position: 'right',
-			size: { height: 50, width: 100 },
-			text: 'Output Node',
-			focus: false
-		}
-	)
-	const inputRef = document.querySelector('.canvas-edges')
-	console.log('inputRef', inputRef)
-	const config = { attributes: true, childList: true, subtree: true };
-	let inputA;
-	let inputB;
-	let output;
+	groupNode.flowData = {
+		inputNodes: [],
+		outputNodes: [],
+		parameters: [],
+		fn: fn
+	}
+	for (const [i, input] of inputs.entries() ) { 
+		const inputNode = canvas.createTextNode(
+			{
+				pos: { x: bounds.xLeft + 5, y: bounds.yTop + (i * 70) },
+				position: 'left',
+				size: { height: 50, width: 100 },
+				text: input,
+				focus: false
+			}
+		)
+		groupNode.flowData.inputNodes.push(inputNode.id)
+	}
+	for (const [i, parameter] of parameters.entries()) {
+		const parameterNode = canvas.createTextNode(
+			{
+				pos: { x: bounds.xLeft + (size.width/2) - 100/2, y: bounds.yTop + (i * 70) },
+				position: 'left',
+				size: { height: 50, width: 100 },
+				text: parameter,
+				focus: false
+			}
+		)
+		groupNode.flowData.parameters.push(parameterNode.id)
+	}
+	for (const [i, output] of outputs.entries()) {
+		const outputNode = canvas.createTextNode(
+			{
+				pos: { x: bounds.xRight - 5, y: bounds.yTop + (i * 70) },
+				position: 'right',
+				size: { height: 50, width: 100 },
+				text: output,
+				focus: false
+			}
+		)
+		groupNode.flowData.outputNodes.push(outputNode.id)
+	}
+	/*
 	const callback = (mutationList, observer) => {
 		console.log('mutation confirmed')
 		console.log('mutationList', mutationList)
@@ -325,7 +341,23 @@ export const createFlowNode = function (
 			}
 		}
 	}
-	const observer = new MutationObserver(callback)
-	observer.observe(inputRef, config)
+	*/
+	//const observer = new MutationObserver(callback)
+	//observer.observe(inputRef, config)
 	canvas.addNode(groupNode)
+	canvas.flowNodes.push(groupNode.id)
+}
+
+
+export const testFlowNode = function (data: FlowNodeData) {
+	console.log('testFlowNode', data)
+	createFlowNode.call(this, {
+		name: data.name,
+		inputs: data.inputs,
+		parameters: data.parameters,
+		outputs: data.outputs,
+		fn: data.fn,
+		size: data.size
+	})
+
 }

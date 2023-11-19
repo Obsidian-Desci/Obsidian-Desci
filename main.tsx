@@ -27,9 +27,9 @@ import { HypercertModal } from 'src/Hypercerts/HypercertsCanvasNodeView';
 import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
 import ExampleClient from './artifacts/ExampleClient.json'
 import { WalletModal } from './src/Wallet/WalletView';
-import { WalletStatusBarItem} from './src/Wallet/WalletStatusBarItem'
+import { WalletStatusBarItem } from './src/Wallet/WalletStatusBarItem'
 
-import { createFlowNode } from './src/utils/canvas-util';
+import { testFlowNode } from './src/utils/canvas-util';
 import {
 	localhost,
 	mainnet,
@@ -49,19 +49,20 @@ export default class ObsidianDesci extends Plugin {
 	signer: Signer
 	exampleClient: ethers.Contract
 	wagmiConfig: object
+	observer: MutationObserver
 	logDebug: (...args: unknown[]) => void = () => { }
 	async onload() {
 		await this.loadSettings();
 
-		const projectId =  'ded360a934deb7668cafc3d5ae1928e4'
-		const chainsModal = [ mainnet, optimism, arbitrum, localhost]
-		  const metadata = {
+		const projectId = 'ded360a934deb7668cafc3d5ae1928e4'
+		const chainsModal = [mainnet, optimism, arbitrum, localhost]
+		const metadata = {
 			name: 'Obsidian Desci',
 			description: 'Web3 x Obsidian.md x DeSci',
 			url: 'https://web3modal.com',
 			icons: ['https://avatars.githubusercontent.com/u/37784886']
 		}
-		  
+
 		const wagmiConfig = defaultWagmiConfig({
 			chains: chainsModal,
 			projectId,
@@ -78,10 +79,9 @@ export default class ObsidianDesci extends Plugin {
 		const root = createRoot(rootElement)
 		root.render(
 			<WagmiConfig config={wagmiConfig}>
-				<WalletStatusBarItem/>
+				<WalletStatusBarItem />
 			</WagmiConfig>
 		)
-
 
 		this.provider = new JsonRpcProvider(this.settings.chain.rpcUrl)
 		if (this.settings.privateKey) {
@@ -150,16 +150,86 @@ export default class ObsidianDesci extends Plugin {
 		this.addCommand({
 			id: 'testFlowNode',
 			name: 'testFlowNode - test flow node',
-			callback: createFlowNode.bind(this)
+			callback: testFlowNode.bind(this, {
+				name: 'test',
+				inputs: ['a', 'b'], 
+				parameters: ['c'],
+				outputs: ['sum'],
+				fn: (a:string, b:string) => Number(a) + Number(b),
+				size: { height: 261, width: 261*2 }
+			})
 		})
 		this.addSettingTab(new ObsidianDesciSettingTab(this.app, this));
 
 
 		this.registerExtensions(["sdf"], "markdown");
 		this.registerExtensions(["pdb"], "markdown");
+
+		this.app.workspace.on('layout-change', () => {
+			const canvas = this.getActiveCanvas()
+			if (canvas) {
+				if(typeof canvas.flowNodes === 'undefined') {
+					canvas.flowNodes = []
+				}
+				canvas.requestSave()
+				const inputRef = document.querySelector('.canvas-edges')
+				const config = { attributes: true, childList: true, subtree: true };
+				const callback = (mutationList, observer) => {
+					console.log('mutationList', mutationList)
+					console.log('observer', observer);
+					console.log('flow nodes',canvas.flowNodes)
+					console.log('canvas', canvas)
+
+					canvas.flowNodes.forEach((nodeId,i) => {
+						console.log('nodeId', nodeId);
+						const node = canvas.nodes.get(nodeId)
+						const inputVals = []
+						console.log('node', node)
+						node.flowData.inputNodes.forEach((input, i) => {
+							const edge = canvas.getEdgesForNode(canvas.nodes.get(input))
+							if (edge.length === 1) {
+								inputVals.push(edge[0].from.node.text)
+							}
+						})
+						console.log('inputvals', inputVals)
+						console.log('inputNodes', node.flowData.inputNodes.length)
+						if (inputVals.length === node.flowData.inputNodes.length) {
+							const outputNode = canvas.nodes.get(node.flowData.outputNodes[0])
+							const outputEdge = canvas.getEdgesForNode(outputNode)
+							console.log(outputEdge)
+							if (outputEdge.length === 1) {
+								const output = node.flowData.fn(...inputVals)
+								console.log('output', output)
+								outputEdge[0].to.node.setData({
+									text: `${output}` // output
+								})
+							}
+						}
+
+						console.log('node', node)
+					})
+					for (const mutation of mutationList) {
+						if (mutation.type === 'childList') {
+							console.log('mutation', mutation)
+						} else if (mutation.type === 'attributes') {
+							console.log('mutation attribute  name', mutation.attributeName)
+						}
+					}
+				}
+
+				this.observer = new MutationObserver(callback)
+				this.observer.observe(inputRef, config)
+			} else {
+				if (this.observer) {
+					this.observer.disconnect()
+				}
+			}
+		})
+
 	}
 
 	onunload() {
+		console.log('unloading')
 	}
 
 

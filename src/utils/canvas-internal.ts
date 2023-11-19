@@ -54,6 +54,7 @@ export interface Canvas {
 	edges: CanvasEdge[]
 	selection: Set<CanvasNode>
 	nodes: CanvasNode[]
+	flowNodes: string[]
 	wrapperEl: HTMLElement | null
 	pointer: { x: number, y: number }
 	addNode(node: CanvasNode): void
