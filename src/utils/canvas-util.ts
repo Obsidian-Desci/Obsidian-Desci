@@ -1,4 +1,4 @@
-import { ItemView, TFile } from 'obsidian'
+import { ItemView, TFile,FileSystemAdapter } from 'obsidian'
 import { Canvas, CanvasNode, CreateNodeOptions } from './canvas-internal'
 import { AllCanvasNodeData } from 'obsidian/canvas'
 
@@ -226,7 +226,7 @@ export async function getNodeText(node: CanvasNode) {
 
 
 
-
+/*
 
 interface FlowNodeData {
 	name: string,
@@ -259,6 +259,7 @@ export const createFlowNode = function ({
 			focus: false
 		}
 	)
+	console.log(canvas, groupNode)
 	groupNode.label = name
 	console.log('groupNode', groupNode)
 	groupNode.flowData = {
@@ -341,11 +342,11 @@ export const createFlowNode = function ({
 			}
 		}
 	}
-	*/
 	//const observer = new MutationObserver(callback)
 	//observer.observe(inputRef, config)
 	canvas.addNode(groupNode)
 	canvas.flowNodes.push(groupNode.id)
+	
 }
 
 
@@ -361,3 +362,5 @@ export const testFlowNode = function (data: FlowNodeData) {
 	})
 
 }
+
+*/

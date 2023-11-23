@@ -6,13 +6,14 @@ import { App, Modal } from "obsidian"
 import { AppContext } from "src/context/AppContext";
 import { WagmiConfig } from "wagmi";
 
-type FormValues = {
-  hypercertName: string
-  logoImageLink: string
+export type FormValues = {
+  name: string
+  image: string
   backgroundBannerImageLink: string
   description: string
   link: string
-  workScope: string
+  workScope: string[]
+  impactScope: string[]
   startDate: Date
   endDate: Date
   contributors: string[]
@@ -26,8 +27,8 @@ type FormValues = {
   const resolver: Resolver<FormValues> = async (values) => {
     const errors: FieldErrors<FormValues> = {};
     const requiredFields = [
-      'hypercertName',
-      'logoImageLink',
+      'name',
+      'image',
       'backgroundBannerImageLink',
       'description',
       'link',
@@ -56,22 +57,39 @@ type FormValues = {
   }
 }
 
-export const HyperCertsCanvasNodeView = ({nftStorageApiKey}:{nftStorageApiKey: string}) => {
+export const HyperCertsCanvasNodeView = (
+  {nftStorageApiKey, web3StorageApiKey}:
+  {nftStorageApiKey: string, web3StorageApiKey: string}
+) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>({ resolver })
+  } = useForm<FormValues>({ resolver, defaultValues: {
+    name: 'test',
+    image: 'https://example.com',
+    backgroundBannerImageLink: 'https://example.com',
+    description: ' a test',
+    link: 'https://example.com',
+    workScope: ['a test scope'],
+    impactScope: ['a test impact scope', 'hmmm'],
+    startDate: new Date(),
+    endDate: new Date(new Date().setDate(new Date().getDate() + 1)),
+    contributors: ['0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'],
+    allowList: undefined,
+    distributionToAllowList: 1,
+    deduplicate: true,
+    contributorPermission: true,
+    hypercertToC: true
+  } })
   const {
     createHypercert,
     result: createHypercertResult,
     hash: createHypercertHash,
-  } = useCreateHypercert(nftStorageApiKey)
+  } = useCreateHypercert(nftStorageApiKey,web3StorageApiKey)
   const onSubmit = handleSubmit((data) => {
     console.log(data)
-    createHypercert({
-      data
-    })
+    createHypercert(data)
 
   })
 
@@ -80,11 +98,11 @@ export const HyperCertsCanvasNodeView = ({nftStorageApiKey}:{nftStorageApiKey: s
     <form onSubmit={onSubmit}>
       <h4>Create Hypercert</h4>
       <p>Hypercert Name:</p>
-      <input {...register("hypercertName")} placeholder="Hypercert Name" />
-      <p style={{color: 'red', fontSize: '10px'}}>{errors?.hypercertName && <p>{errors.hypercertName.message}</p>}</p>
+      <input {...register("name")} placeholder="Hypercert Name" />
+      <p style={{color: 'red', fontSize: '10px'}}>{errors?.name && <p>{errors.name.message}</p>}</p>
       <p>Hypercert Details</p>
-      <input {...register("logoImageLink")} placeholder="Logo Image Link" />
-      <p style={{color: 'red', fontSize: '10px'}}>{errors?.logoImageLink && <p>{errors.logoImageLink.message}</p>}</p>
+      <input {...register("image")} placeholder="Logo Image Link" />
+      <p style={{color: 'red', fontSize: '10px'}}>{errors?.image && <p>{errors.image.message}</p>}</p>
       <p>Banner Image Link</p>
       <input {...register("backgroundBannerImageLink")} placeholder="Background Banner Image Link" />
       <p style={{color: 'red', fontSize: '10px'}}>{errors?.backgroundBannerImageLink && <p>{errors.backgroundBannerImageLink.message}</p>}</p>
@@ -97,6 +115,9 @@ export const HyperCertsCanvasNodeView = ({nftStorageApiKey}:{nftStorageApiKey: s
       <p>Work Scope</p>
       <input {...register("workScope")} placeholder="Work Scope" />
       <p style={{color: 'red', fontSize: '10px'}}>{errors?.workScope && <p>{errors.workScope.message}</p>}</p>
+      <p>Impact Scope</p>
+      <input {...register("impactScope")} placeholder="Impact Scope" />
+      <p style={{color: 'red', fontSize: '10px'}}>{errors?.impactScope && <p>{errors.impactScope.message}</p>}</p>
       <p>Start Date</p>
       <input {...register("startDate")} placeholder="Start Date" />
       <p style={{color: 'red', fontSize: '10px'}}>{errors?.startDate && <p>{errors.startDate.message}</p>}</p>
@@ -107,7 +128,7 @@ export const HyperCertsCanvasNodeView = ({nftStorageApiKey}:{nftStorageApiKey: s
       <input {...register("contributors")} placeholder="Contributors" />
       <p style={{ color: 'red', fontSize: '10px'}}>{errors?.contributors && <p>{errors.contributors.message}</p>}</p>
       <p>Allow List</p>
-      <input {...register("allowList")} placeholder="Allow List" />
+      <input type="file" {...register("allowList")} accept=".csv" placeholder="Allow List CSV File" />
       <p style={{ color: 'red', fontSize: '10px'}}>{errors?.allowList && <p>{errors.allowList.message}</p>}</p>
       <p>Distribution To Allow List</p>
       <input {...register("distributionToAllowList")} placeholder="Distribution To Allow List" />
@@ -129,11 +150,13 @@ export class HypercertModal extends Modal {
 	root: Root | null = null;
   wagmiConfig: any;
   nftStorageApiKey: string;
-	constructor(app: App, wagmiConfig: any, nftStorageApiKey: string) {
+  web3StorageApiKey: string;
+	constructor(app: App, wagmiConfig: any, nftStorageApiKey: string, web3StorageApiKey: string) {
 		super(app);
     console.log(this.app)
     this.wagmiConfig = wagmiConfig
     this.nftStorageApiKey = nftStorageApiKey
+    this.web3StorageApiKey = web3StorageApiKey
 	}
 	/*	
 	getViewType() {
@@ -152,7 +175,7 @@ export class HypercertModal extends Modal {
 		this.root.render(
 			<AppContext.Provider value={this.app}>
 				<WagmiConfig config={this.wagmiConfig}>
-          <HyperCertsCanvasNodeView nftStorageApiKey={this.nftStorageApiKey} />
+          <HyperCertsCanvasNodeView nftStorageApiKey={this.nftStorageApiKey} web3StorageApiKey={this.web3StorageApiKey} />
 				</WagmiConfig>
 			</AppContext.Provider>,
 		);

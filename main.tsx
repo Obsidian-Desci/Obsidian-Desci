@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { Notice, Plugin, ItemView } from 'obsidian';
+import { Notice, Plugin, ItemView, FileSystemAdapter } from 'obsidian';
 import {
 	type CanvasView,
 } from './src/utils/canvas-util'
@@ -25,11 +25,16 @@ import { viewMolecule } from 'src/plex/viewMolecule';
 import { HypercertModal } from 'src/Hypercerts/HypercertsCanvasNodeView';
 
 import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
+import { PrivateKeyAccount, createWalletClient, http } from 'viem'
+import { privateKeyToAccount } from 'viem/accounts' // [!code focus]
+
 import ExampleClient from './artifacts/ExampleClient.json'
 import { WalletModal } from './src/Wallet/WalletView';
 import { WalletStatusBarItem } from './src/Wallet/WalletStatusBarItem'
 
-import { testFlowNode } from './src/utils/canvas-util';
+//import { testFlowNode } from './src/utils/canvas-util';
+import {around} from 'monkey-around';
+
 import {
 	localhost,
 	mainnet,
@@ -47,6 +52,7 @@ export default class ObsidianDesci extends Plugin {
 	provider: Provider
 	wallet: Wallet
 	signer: Signer
+	account: PrivateKeyAccount
 	exampleClient: ethers.Contract
 	wagmiConfig: object
 	observer: MutationObserver
@@ -57,8 +63,8 @@ export default class ObsidianDesci extends Plugin {
 		const projectId = 'ded360a934deb7668cafc3d5ae1928e4'
 		const chainsModal = [mainnet, optimism, arbitrum, localhost]
 		const metadata = {
-			name: 'Obsidian Desci',
-			description: 'Web3 x Obsidian.md x DeSci',
+			name: 'Obsidian DeSci',
+			description: 'Obsidian DeSci',
 			url: 'https://web3modal.com',
 			icons: ['https://avatars.githubusercontent.com/u/37784886']
 		}
@@ -85,6 +91,8 @@ export default class ObsidianDesci extends Plugin {
 
 		this.provider = new JsonRpcProvider(this.settings.chain.rpcUrl)
 		if (this.settings.privateKey) {
+			console.log(this.settings.privateKey)
+			this.account = privateKeyToAccount('0x' + this.settings.privateKey)
 			this.wallet = new Wallet(this.settings.privateKey, this.provider)
 			this.signer = this.wallet.connect(this.provider)
 			this.exampleClient = new ethers.Contract(ExampleClient.address, ExampleClient.abi, this.signer)
@@ -144,9 +152,10 @@ export default class ObsidianDesci extends Plugin {
 			id: 'createHypercert',
 			name: 'createHypercert - create a hypercert',
 			callback: () => {
-				new HypercertModal(this.app, wagmiConfig).open();
+				new HypercertModal(this.app, wagmiConfig, this.settings.nftStorageApiKey, this.settings.web3StorageApiKey).open();
 			}
 		})
+		/*
 		this.addCommand({
 			id: 'testFlowNode',
 			name: 'testFlowNode - test flow node',
@@ -159,13 +168,56 @@ export default class ObsidianDesci extends Plugin {
 				size: { height: 261, width: 261*2 }
 			})
 		})
+		*/
 		this.addSettingTab(new ObsidianDesciSettingTab(this.app, this));
 
 
 		this.registerExtensions(["sdf"], "markdown");
 		this.registerExtensions(["pdb"], "markdown");
+		/*
+		this.register(around(this.app.internalPlugins.plugins.canvas.constructor.prototype, {
+			saveData(oldMethod) {
+				console.log('hi')	
+				console.log('old', oldMethod)
+				return function(...args) {
+					console.log('there')
+					const result = oldMethod && oldMethod.apply(this, args)
+					console.log('newsave', result)
+					return result
+				}
+			},
+			handleConfigFileChange(oldMethod) {
+				console.log('config file change')
+				console.log('oldMethod', oldMethod)
+				return function (...args) {
+					const result = oldMethod && oldMethod.apply(this, args)
+					console.log('config filechange', result)
+					return result
+				}
+			}
+		}))
+		console.log(this.app.internalPlugins.plugins.canvas)
+		/*	
+		console.log('app.internalPlugins...', this.app.internalPlugins.plugins.canvas.constructor.prototype.saveData)
+		console.log(this.app.vault.writeConfigJson)
+		// Monkey patching the saveData method
+		this.app.internalPlugins.plugins.canvas.constructor.prototype.saveData = ((oldSaveData) => {
+		    return function(...args) {
+		        // Perform your operations here
+		        // For example, add additional data
+		        const additionalData = {
+		            extra: "Data"
+		        };
+				console.log('saving', args)
+		        // Merge the additional data
+		        const result = {...oldSaveData.apply(this, args), ...additionalData};
+		        console.log('newsave', result)
+		        return result;
+		    }
+		})(this.app.internalPlugins.plugins.canvas.constructor.prototype.saveData);
 
-		this.app.workspace.on('layout-change', () => {
+		this.app.workspace.on('layout-change', (evt) => {
+			console.log('evt', evt)
 			const canvas = this.getActiveCanvas()
 			if (canvas) {
 				if(typeof canvas.flowNodes === 'undefined') {
@@ -175,8 +227,6 @@ export default class ObsidianDesci extends Plugin {
 				const inputRef = document.querySelector('.canvas-edges')
 				const config = { attributes: true, childList: true, subtree: true };
 				const callback = (mutationList, observer) => {
-					console.log('mutationList', mutationList)
-					console.log('observer', observer);
 					console.log('flow nodes',canvas.flowNodes)
 					console.log('canvas', canvas)
 
@@ -225,11 +275,16 @@ export default class ObsidianDesci extends Plugin {
 				}
 			}
 		})
-
+*/
 	}
 
 	onunload() {
 		console.log('unloading')
+		/*
+		this.app.workspace.off('layout-change', (evt) => {
+			console.log('off loading layout change')
+		})	
+		*/
 	}
 
 

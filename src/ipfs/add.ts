@@ -1,3 +1,9 @@
+import { NFTStorage, File } from 'nft.storage'
+import mime from 'mime'
+import fs from 'fs'
+import path from 'path'
+
+
 import { requestUrl } from 'obsidian'
 import { CanvasNode } from 'src/utils/canvas-internal'
 import {
@@ -55,6 +61,7 @@ export const add = async function () {
         )
 
         try {
+            const nftstorage = new NFTStorage({})
             /*
             const dag = {}
             const cid = await requestUrl({

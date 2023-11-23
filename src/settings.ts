@@ -13,6 +13,7 @@ export interface ObsidianDesciSettings {
 	chain: ChainConfig;
 	kuboRpc: string;
 	nftStorageApiKey: string;
+	web3StorageApiKey: string;
 }
 
 export const DEFAULT_SETTINGS: ObsidianDesciSettings = {
@@ -24,7 +25,8 @@ export const DEFAULT_SETTINGS: ObsidianDesciSettings = {
 		chainId: 1337
 	},
 	kuboRpc: 'http:/127.0.0.1:5001/api/v0',
-	nftStorageApiKey: ''
+	nftStorageApiKey: '',
+	web3StorageApiKey:''
 }
 
 export class ObsidianDesciSettingTab extends PluginSettingTab {
@@ -71,6 +73,16 @@ export class ObsidianDesciSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.nftStorageApiKey)
 				.onChange(async (value) => {
 					this.plugin.settings.nftStorageApiKey = value;
+					await this.plugin.saveSettings();
+				}));
+		new Setting(containerEl)
+			.setName('Web3.storage api key')
+			.setDesc('It\'s a secret')
+			.addText(text => text
+				.setPlaceholder('Enter your Web3.Storage api key')
+				.setValue(this.plugin.settings.web3StorageApiKey)
+				.onChange(async (value) => {
+					this.plugin.settings.web3StorageApiKey = value;
 					await this.plugin.saveSettings();
 				}));
 	}
