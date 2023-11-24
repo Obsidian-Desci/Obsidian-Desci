@@ -6,7 +6,7 @@ import { useApp } from "src/hooks/useApp";
 import { WagmiConfig } from "wagmi";
 import { useAccount, useBalance, useDisconnect } from 'wagmi'
 import { useWeb3Modal } from '@web3modal/wagmi/react'
-export const Wallet = () => {
+export const NetworkParams = () => {
 	const [pkImport, setPkImport] = useState(false);
 	const { address, isConnected } = useAccount()
 	const { open } = useWeb3Modal()
@@ -59,7 +59,7 @@ export class WalletModal extends Modal {
 		this.root.render(
 			<AppContext.Provider value={this.app}>
 				<WagmiConfig config={this.wagmiConfig}>
-					<Wallet />
+					<NetworkParams />
 				</WagmiConfig>
 			</AppContext.Provider>,
 		);

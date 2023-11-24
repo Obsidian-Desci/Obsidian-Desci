@@ -11,7 +11,7 @@ import {
 
 import { getDpid } from './src/desci-nodes/getDpid'
 import { runSdxl } from './src/lilypad/runSdxl'
-import { runCowsay } from 'src/lilypad/runCowsay';
+import { RunJobModal} from 'src/lilypad/RunJob/RunJobModal';
 
 import { dagGet } from './src/ipfs/dagGet'
 import { cat } from './src/ipfs/cat'
@@ -99,9 +99,11 @@ export default class ObsidianDesci extends Plugin {
 		} else {
 		}
 		this.addCommand({
-			id: 'runCowsay',
-			name: 'runCowsay - execute the cowsay program through a smart contract',
-			callback: runCowsay.bind(this)
+			id: 'runJob',
+			name: 'runJob - execute and edge compute job through lilypad',
+			callback: () => {
+				new RunJobModal(this.app, wagmiConfig).open();
+			}
 		});
 		this.addCommand({
 			id: 'runSDXL',

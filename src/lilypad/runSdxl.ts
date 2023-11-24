@@ -6,6 +6,13 @@ import {
 } from '../utils/canvas-util'
 import { CanvasNode } from 'src/utils/canvas-internal'
 import { ethers } from 'ethers'
+import { getContract, parseEther, zeroAddress } from 'viem'
+
+import { 
+    useAccount,
+    usePublicClient,
+    useWalletClient
+} from 'wagmi'
 export const runSdxl = async function () {
     if (this.unloaded) return
 

@@ -1,4 +1,5 @@
 import { requestUrl } from 'obsidian'
+import { App, Modal } from "obsidian";
 import { CanvasNode } from 'src/utils/canvas-internal'
 import {
     createNode,
@@ -7,7 +8,60 @@ import {
     getNodeText
 } from '../utils/canvas-util'
 
+import { useState, useCallback, useEffect } from 'react'
+import { Root, createRoot } from "react-dom/client";
+import { getContract, parseEther, zeroAddress } from 'viem'
+import { 
+    useAccount,
+    usePublicClient,
+    useWalletClient,
+    WagmiConfig
+} from 'wagmi'
+import { useForm, Resolver, FieldErrors } from "react-hook-form"
+import { AppContext } from 'src/context/AppContext'
+import { useApp } from 'src/hooks/useApp'
+import { NetworkParams, WalletModal } from 'src/Wallet/WalletView';
+import { RunJobForm } from './RunJob/RunJobForm'
+import {address as clientAddress, abi as clientAbi} from 'artifacts/LilypadClient.json'
+const drawResult = (app:App, result: any) => {
+    
+}
+export class RunJobModal extends WalletModal {
+	constructor(app: App, wagmiConfig: any ) {
+		super(app, wagmiConfig);
+	}
+	/*	
+	getViewType() {
+		return VIEW_TYPE_EXAMPLE;
+	}
+
+	getDisplayText() {
+		return "Wallet View";
+	}
+*/
+
+	async onOpen() {
+		let { contentEl } = this;
+		//contentEl.setText("Look at me, I'm a modal! 👀");
+		this.root = createRoot(contentEl);
+		this.root.render(
+			<AppContext.Provider value={this.app}>
+				<WagmiConfig config={this.wagmiConfig}>
+                    <NetworkParams />
+                    <RunJobForm handleCloseModal={() => this.close()} />
+				</WagmiConfig>
+			</AppContext.Provider>,
+		);
+	}
+
+	async onClose() {
+		let { contentEl } = this;
+		contentEl.empty();
+	}
+}
+/*
 import {ethers} from 'ethers'
+
 export const runCowsay = async function () {
     if (this.unloaded) return
 
@@ -78,3 +132,4 @@ export const runCowsay = async function () {
         }
     }
 }
+*/
