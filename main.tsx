@@ -25,26 +25,24 @@ import { viewMolecule } from 'src/plex/viewMolecule';
 import { HypercertModal } from 'src/Hypercerts/HypercertsCanvasNodeView';
 
 import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
-import { PrivateKeyAccount, createWalletClient, http } from 'viem'
-import { privateKeyToAccount } from 'viem/accounts' // [!code focus]
 
 import ExampleClient from './artifacts/ExampleClient.json'
+
 import { WalletModal } from './src/Wallet/WalletView';
 import { WalletStatusBarItem } from './src/Wallet/WalletStatusBarItem'
-
+import { chains, publicClient} from './src/Wallet/config/LilypadChain'
 //import { testFlowNode } from './src/utils/canvas-util';
 import {around} from 'monkey-around';
 
-import {
-	localhost,
-	mainnet,
-	optimism,
-	arbitrum,
-	evmosTestnet,
-} from 'wagmi/chains';
+
+import { PrivateKeyAccount, createWalletClient, http } from 'viem'
+import { privateKeyToAccount } from 'viem/accounts' // [!code focus]
+import { createConfig,WagmiConfig, configureChains } from 'wagmi';
+
+import { InjectedConnector} from 'wagmi/connectors/injected'
+import { WalletConnectConnector} from 'wagmi/connectors/walletConnect'
 
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react'
-import { WagmiConfig } from 'wagmi';
 
 export default class ObsidianDesci extends Plugin {
 	settings: ObsidianDesciSettings;
@@ -61,23 +59,39 @@ export default class ObsidianDesci extends Plugin {
 		await this.loadSettings();
 
 		const projectId = 'ded360a934deb7668cafc3d5ae1928e4'
-		const chainsModal = [mainnet, optimism, arbitrum, localhost]
 		const metadata = {
 			name: 'Obsidian DeSci',
 			description: 'Obsidian DeSci',
 			url: 'https://web3modal.com',
 			icons: ['https://avatars.githubusercontent.com/u/37784886']
 		}
-
+		/*
 		const wagmiConfig = defaultWagmiConfig({
 			chains: chainsModal,
 			projectId,
 			metadata,
 		})
+		*/
+
+		
+		  const wagmiConfig = createConfig({
+			connectors: [
+				new InjectedConnector({ chains}),
+				new WalletConnectConnector({
+					chains,
+					options: {
+						projectId
+					}
+				})
+			],
+			publicClient,
+		  })
+
+
 		this.wagmiConfig = wagmiConfig
-		createWeb3Modal({ wagmiConfig, projectId, chains: chainsModal })
+		createWeb3Modal({ wagmiConfig, projectId, chains: chains, disableInjectedProvider: false })
 		const walletTab = this.addRibbonIcon("wallet", "Open Wallet", () => {
-			new WalletModal(this.app, wagmiConfig).open();
+			new WalletModal(this, wagmiConfig).open();
 		})
 
 		const walletStatus = this.addStatusBarItem()
@@ -91,7 +105,6 @@ export default class ObsidianDesci extends Plugin {
 
 		this.provider = new JsonRpcProvider(this.settings.chain.rpcUrl)
 		if (this.settings.privateKey) {
-			console.log(this.settings.privateKey)
 			this.account = privateKeyToAccount('0x' + this.settings.privateKey)
 			this.wallet = new Wallet(this.settings.privateKey, this.provider)
 			this.signer = this.wallet.connect(this.provider)
@@ -102,7 +115,7 @@ export default class ObsidianDesci extends Plugin {
 			id: 'runJob',
 			name: 'runJob - execute and edge compute job through lilypad',
 			callback: () => {
-				new RunJobModal(this.app, wagmiConfig).open();
+				new RunJobModal(this, wagmiConfig).open();
 			}
 		});
 		this.addCommand({

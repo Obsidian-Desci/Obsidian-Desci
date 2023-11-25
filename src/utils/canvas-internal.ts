@@ -2,6 +2,7 @@ import { App, TFile} from 'obsidian'
 import { AllCanvasNodeData, CanvasData } from 'obsidian/canvas'
 
 export interface CanvasNode {
+	file: TFile
 	id: string
 	app: App
 	canvas: Canvas

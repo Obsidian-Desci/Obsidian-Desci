@@ -5,6 +5,7 @@ import { useAccount} from 'wagmi'
 import { useRunJob } from './useRunJob'
 import { AppContext } from 'src/context/AppContext'
 import { useApp } from 'src/hooks/useApp'
+import { usePlugin } from 'src/hooks/usePlugin'
 import { drawTextNode } from './drawCanvas'
 export type RunJobValues = {
         // what is the module name we are making an offer for
@@ -47,6 +48,7 @@ export const RunJobForm = ({handleCloseModal}:
     {handleCloseModal: () => void}
     ) => {
     const app = useApp()
+    const plugin = usePlugin()
     
     
     const { fetchRunJob, jobIdHash, jobId, dealId, dataId, module, inputs, payee } = useRunJob()
@@ -56,9 +58,9 @@ export const RunJobForm = ({handleCloseModal}:
     });
     const onSubmit = (data: RunJobValues) => {
         fetchRunJob({
-            module: data.module,
-            inputs: data.inputs,
-            payee: data.payee
+            initialModule: data.module,
+            initialInputs: data.inputs,
+            initialPayee: data.payee
         })
         console.log(data);
     }
@@ -66,7 +68,7 @@ export const RunJobForm = ({handleCloseModal}:
         if (jobIdHash) {
             console.log(jobIdHash)
             console.log('transaction submitted')
-            drawTextNode(app, jobIdHash)
+            //drawTextNode(app, jobIdHash)
             
             
         }
@@ -86,9 +88,13 @@ export const RunJobForm = ({handleCloseModal}:
     }, [dealId, dataId])
 
     useEffect(() => {
+        console.log('module', module)
+        console.log('inputs', inputs)
+        console.log('payee', payee)
+
         if (module) setValue('module', module)
         if (inputs) setValue('inputs', inputs)
-        if (payee) setValue('payee', payee)
+        if (payee) setValue('payee', payee as `0x${string}`)
     }, [module, inputs, payee])
     return (<div>
         <form onSubmit={handleSubmit(onSubmit)}>

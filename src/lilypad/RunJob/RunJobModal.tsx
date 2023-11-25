@@ -1,5 +1,5 @@
 import React from 'react'
-import { ObsidianDesci} from 'main'
+import ObsidianDesci from 'main'
 import { App, Modal } from "obsidian";
 import { CanvasNode } from '../../utils/canvas-internal'
 import {
@@ -14,6 +14,7 @@ import {
     WagmiConfig
 } from 'wagmi'
 import { AppContext } from '../../context/AppContext'
+import { PluginContext } from '../../context/PluginContext'
 import { NetworkParams, WalletModal } from '../../Wallet/WalletView';
 import { RunJobForm } from './RunJobForm'
 
@@ -21,8 +22,11 @@ const drawResult = (app:App, result: any) => {
     
 }
 export class RunJobModal extends WalletModal {
+
+	plugin: ObsidianDesci
 	constructor(plugin: ObsidianDesci, wagmiConfig: any ) {
 		super(plugin.app, wagmiConfig);
+		this.plugin = plugin
 	}
 	/*	
 	getViewType() {
@@ -39,13 +43,15 @@ export class RunJobModal extends WalletModal {
 		//contentEl.setText("Look at me, I'm a modal! 👀");
 		this.root = createRoot(contentEl);
 		this.root.render(
-			<AppContext.Provider value={this.app}>
+			<PluginContext.Provider value={this.plugin}>
+				<AppContext.Provider value={this.app}>
 				<WagmiConfig config={this.wagmiConfig}>
                     <NetworkParams />
                     <RunJobForm
                         handleCloseModal={() => this.close()} />
 				</WagmiConfig>
-			</AppContext.Provider>,
+			</AppContext.Provider>
+			</PluginContext.Provider>
 		);
 	}
 

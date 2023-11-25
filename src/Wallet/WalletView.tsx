@@ -2,23 +2,57 @@ import { StrictMode, useEffect, useState } from "react";
 import { App, Modal } from "obsidian";
 import { Root, createRoot } from "react-dom/client";
 import { AppContext } from "src/context/AppContext";
+import { PluginContext } from "src/context/PluginContext";
 import { useApp } from "src/hooks/useApp";
+import { usePlugin } from "src/hooks/usePlugin";
 import { WagmiConfig } from "wagmi";
-import { useAccount, useBalance, useDisconnect } from 'wagmi'
+import { useAccount as useWagmiAccount, useBalance as useWagmiBalance, useDisconnect as useWagmiDisconnect } from 'wagmi'
+import { useInjected, useInjectedPublicClient, useInjectedWalletClient, useInjectedDisconnect, useInjectedBalance } from "./useInjected";
 import { useWeb3Modal } from '@web3modal/wagmi/react'
+import ObsidianDesci  from 'main'
+
+
+export const useAccount = (isInjected: boolean) => {
+	if (isInjected) {
+		return useInjected()
+	} else {
+		return useWagmiAccount()
+	}
+}
+
+export const useDisconnect = (isInjected: boolean) => {
+	if (isInjected) {
+		return useInjectedDisconnect()
+	} else {
+		return useWagmiDisconnect()
+	}
+}
+
+export const useBalance = (isInjected: boolean, params: any) => {
+	if (isInjected) {
+		return useInjectedBalance(params)
+	} else {
+		return useWagmiBalance(params)
+	}
+}
+
+
+
+
 export const NetworkParams = () => {
-	const [pkImport, setPkImport] = useState(false);
-	const { address, isConnected } = useAccount()
+	const [isInjected, setIsInjected] = useState(false);
+	const { address, isConnected } = useAccount(isInjected)
 	const { open } = useWeb3Modal()
-	const { disconnect } = useDisconnect()
-	const { data: balance, isError, isLoading:isBalanceLoading, refetch } = useBalance({address})
+	const { disconnect } = useDisconnect(isInjected)
+	const { data: balance, isError, isLoading:isBalanceLoading, refetch } = useBalance(isInjected, {address})
    
 	return (<>
 		<h4>Wallet</h4>
-		{pkImport && <button onClick={() => setPkImport(old => !old)}>Use Wallet Connect</button>}
-		{!pkImport && <button onClick={() => setPkImport(old => !old)}>Use Injected</button>}
-		{pkImport ? (<>
-			
+		{isInjected && <button onClick={() => setIsInjected(old => !old)}>Use Wallet Connect</button>}
+		{!isInjected && <button onClick={() => setIsInjected(old => !old)}>Use Injected</button>}
+		{isInjected ? (<>
+			{isConnected ? (<>{address}</>) : (<>Not connected</>)}
+			{isBalanceLoading ? (<p>Loading balance</p>): (<p>Balance: {balance?.formatted} {balance?.symbol}</p>)}
 		</>) : (<>
 			{isConnected ? (<>
 				<div>Connected to {address}</div>
@@ -37,9 +71,12 @@ export const NetworkParams = () => {
 
 export class WalletModal extends Modal {
 	root: Root | null = null;
+	plugin: ObsidianDesci
 	wagmiConfig: any;
-	constructor(app: App, wagmiConfig: any ) {
-		super(app);
+	constructor(plugin: ObsidianDesci, wagmiConfig: any ) {
+		super(plugin.app);
+		this.plugin = plugin
+		console.log('plugin', plugin)
 		this.wagmiConfig = wagmiConfig
 	}
 	/*	
@@ -55,13 +92,14 @@ export class WalletModal extends Modal {
 	async onOpen() {
 		let { contentEl } = this;
 		//contentEl.setText("Look at me, I'm a modal! 👀");
+
 		this.root = createRoot(contentEl);
 		this.root.render(
-			<AppContext.Provider value={this.app}>
+			<PluginContext.Provider value={this.plugin}>
 				<WagmiConfig config={this.wagmiConfig}>
 					<NetworkParams />
 				</WagmiConfig>
-			</AppContext.Provider>,
+			</PluginContext.Provider>,
 		);
 	}
 
