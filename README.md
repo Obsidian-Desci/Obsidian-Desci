@@ -2,7 +2,7 @@
 <img src="https://obsidian-desci.github.io/Docs/img/obsidian-desci-md-banner.png" />
 </p>
 
-# Obsidian-Desci
+# Obsidian-DeSci
 
 
 Web3 x Obsidian.md x DeSci
