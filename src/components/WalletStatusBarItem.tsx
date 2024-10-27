@@ -1,12 +1,12 @@
-import { useAccount, useNetwork  } from "wagmi"
+import { useAccount,  useConfig  } from "wagmi"
 export const substringAddr = (address:`0x${string}`) => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
   }
   
 export const WalletStatusBarItem = () => {
     
-	const { address, isConnected } = useAccount()
-    const { chain, chains } = useNetwork()
+	const { chain, address, isConnected } = useAccount()
+    const { chains } = useConfig()
 
     return (<>
     { isConnected ?

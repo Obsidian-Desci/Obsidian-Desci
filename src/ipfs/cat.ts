@@ -49,13 +49,15 @@ export const cat = async function () {
         )
 
         try {
+          console.log(`${this.settings.kuboRpc}/cat?arg=${nodeText.trim()}`)
             const res = await requestUrl({
-                url: `${this.settings.kuboRpc}/cat?arg=${nodeText}`,
+                url: `${this.settings.kuboRpc}/cat?arg=${nodeText.trim()}`,
                 method: 'POST',
                 headers: {
-                    //"Content-Type": "text/plain",
+                    "Content-Type": "text/plain",
                 }
             })
+            console.log('res', res.text)
             if (res.text.startsWith('�PNG')) {
 
                 const buffer = Buffer.from(res.arrayBuffer);
@@ -91,9 +93,10 @@ export const cat = async function () {
 
 
         } catch (e) {
+          console.log('e', e.message)
             const cideNodeError = createNode(canvas, created,
                 {
-                    text: `error at ${e}\n is your kubo node on at ${this.settings.kuboRpc}?`,
+                    text: `error at ${e.message}\n is your kubo node on at ${this.settings.kuboRpc}?, if this is a dag node try again with dagGet`,
                     size: { height: placeholderNoteHeight }
                 },
                 {

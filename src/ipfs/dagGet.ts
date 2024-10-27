@@ -42,14 +42,17 @@ export const dagGet = async function () {
             }
         )
         try {
-
+          console.log('nodeText', nodeText)
+          console.log(`${this.settings.kuboRpc}/dag/get?arg=${nodeText}`)
             const res = await requestUrl({
-                url: `${this.settings.kuboRpc}/dag/get?arg=${nodeText}`, 
+                url: `${this.settings.kuboRpc}/dag/get?arg=${nodeText.trim()}`, 
                 method: 'POST',
                 headers: {
                     "Content-Type": "text/plain",
-                }
+                },
+                body: ''
             })
+            console.log('res', res)
             res.json.Links.forEach((link: any) => {
                 const name = createNode(canvas, created,
                     {
