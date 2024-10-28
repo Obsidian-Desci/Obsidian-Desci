@@ -4,8 +4,8 @@ import {
     assistantColor,
     getNodeText
 } from '../utils/canvas-util'
+import { parseEther } from 'viem'
 import { CanvasNode } from 'src/utils/canvas-internal'
-import { ethers } from 'ethers'
 export const runSdxl = async function () {
     if (this.unloaded) return
 
@@ -46,7 +46,7 @@ export const runSdxl = async function () {
         try {
             const tx = await this.exampleClient.runSDXL(
                 nodeText, {
-                value: ethers.parseUnits('4', 'ether')
+                value: parseEther('4')
             }
             )
             const receipt = await tx.wait()

@@ -40,7 +40,6 @@
     "blockstore-core": "^5.0.2",
     "datastore-core": "^10.0.2",
     "esbuild-plugin-polyfill-node": "^0.3.0",
-    "ethers": "^6.13.4",
     "events": "^3.3.0",
     "helia": "^5.1.0",
     "kubo-rpc-client": "^5.0.1",

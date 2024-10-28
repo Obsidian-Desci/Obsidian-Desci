@@ -1,6 +1,6 @@
 import type ObsidianDesci from '../main'
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import {ethers} from 'ethers'
+import { privateKeyToAccount } from 'viem/accounts'
 interface ChainConfig {
 	name: string;
 	rpcUrl: string;
@@ -18,9 +18,9 @@ export const DEFAULT_SETTINGS: ObsidianDesciSettings = {
 	privateKey: '',
 	publicKey: '',
 	chain: {
-		name: 'lilypad',
-		rpcUrl: 'http://testnet.lilypadnetwork.org:8545',
-		chainId: 1337
+		name: 'arbitrum sepolia',
+		rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc',
+		chainId: 421614
 	},
 	kuboRpc: 'http:/127.0.0.1:5001/api/v0'
 }
@@ -46,7 +46,8 @@ export class ObsidianDesciSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.privateKey)
 				.onChange(async (value) => {
 					this.plugin.settings.privateKey = value;
-					this.plugin.settings.publicKey = new ethers.Wallet(value).address,
+          console.log(value)
+					this.plugin.settings.publicKey = privateKeyToAccount('0x' + value as `0x${string}`).address,
 					await this.plugin.saveSettings();
 				}));
 		new Setting(containerEl)

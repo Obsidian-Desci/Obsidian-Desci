@@ -10,8 +10,11 @@ import { runCowsay } from 'src/lilypad/runCowsay';
 import { dagGet } from './src/ipfs/dagGet'
 import { cat } from './src/ipfs/cat'
 import { add } from './src/ipfs/add'
-import { ethers, Signer, Provider, JsonRpcProvider, Wallet } from 'ethers';
-import ExampleClient from './artifacts/ExampleClient.json'
+import { createWalletClient, createPublicClient, http, getContract  } from 'viem'
+import { privateKeyToAccount, type Account } from 'viem/accounts'
+import { type WalletClient, type PublicClient } from 'viem'
+import ExampleClient from './artifacts/LilypadClient.json'
+import LilypadToken from './artifacts/LilypadToken.json'
 import { getMolecule } from './src/plex/getMolecule'
 import { getProtein } from './src/plex/getProtein'
 import { runEquibind } from './src/plex/runEquibind'
@@ -24,6 +27,10 @@ import {
 
 import { WalletModal } from './src/views/WalletView';
 import {
+  localhost, arbitrumSepolia
+} from 'viem/chains';
+/*
+import {
 	localhost,
 	mainnet,
 	optimism,
@@ -33,20 +40,23 @@ import {
 
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react'
 import { WagmiConfig } from 'wagmi';
+*/
+
 
 export default class ObsidianDesci extends Plugin {
 	settings: ObsidianDesciSettings;
 	unloaded = false
-	provider: Provider
-	wallet: Wallet
-	signer: Signer
-	exampleClient: ethers.Contract
+  account: Account
+  walletClient: WalletClient
+  publicClient: PublicClient
+  lilypadToken: any
+  exampleClient: any
 	logDebug: (...args: unknown[]) => void = () => { }
 	async onload() {
 		await this.loadSettings();
-
+    /*
 		const projectId =  'ded360a934deb7668cafc3d5ae1928e4'
-		const chainsModal = [ mainnet, optimism, arbitrum, localhost]
+		const chainsModal = [arbitrumSepolia, localhost]
 		  const metadata = {
 			name: 'Obsidian Desci',
 			description: 'Web3 x Obsidian.md x DeSci',
@@ -64,6 +74,7 @@ export default class ObsidianDesci extends Plugin {
 			new WalletModal(this.app, wagmiConfig).open();
 		})
 
+
 		const walletStatus = this.addStatusBarItem()
 		const rootElement = walletStatus.createEl("span")
 		const root = createRoot(rootElement)
@@ -72,15 +83,40 @@ export default class ObsidianDesci extends Plugin {
 		<WalletStatusBarItem/>
 			</WagmiConfig>
 		)
+     */
 
 
-
-
-		this.provider = new JsonRpcProvider(this.settings.chain.rpcUrl)
 		if (this.settings.privateKey) {
-			this.wallet = new Wallet(this.settings.privateKey, this.provider)
-			this.signer = this.wallet.connect(this.provider)
-			this.exampleClient = new ethers.Contract(ExampleClient.address, ExampleClient.abi, this.signer)
+      // walletClient from privateKey
+      const account = privateKeyToAccount('0x' + this.settings.privateKey as `0x${string}`)
+      this.account = account
+			this.walletClient = createWalletClient({
+        account: this.account,
+        chain: arbitrumSepolia,
+        transport: http(this.settings.chain.rpcUrl)
+			})
+      this.publicClient = createPublicClient({
+        chain: arbitrumSepolia,
+        transport: http(this.settings.chain.rpcUrl)
+      })
+
+      this.lilypadToken = getContract({
+        address: LilypadToken.address as `0x${string}`,
+        abi: LilypadToken.abi,
+        client: {
+          public: this.publicClient,
+          wallet: this.walletClient
+        }
+      })
+
+      this.exampleClient = getContract({
+        address: ExampleClient.address as `0x${string}`,
+        abi: ExampleClient.abi,
+        client: {
+          public: this.publicClient,
+          wallet: this.walletClient
+        }
+      })
 		} else {
 		}
 		this.addCommand({
